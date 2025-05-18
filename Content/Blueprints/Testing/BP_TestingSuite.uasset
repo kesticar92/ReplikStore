@@ -1,0 +1,81 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_TestingSuite"
+   Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+   End Object
+
+   Variables(0)=(VarName="TestCases",VarType="array",ElementType="FTestCase")
+   Variables(1)=(VarName="TestResults",VarType="array",ElementType="FTestResult")
+   Variables(2)=(VarName="AutomatedTestingEnabled",VarType="bool",DefaultValue="true")
+   Variables(3)=(VarName="TestEnvironment",VarType="FTestEnvironment")
+
+   Functions(0)=(FuncName="RunAllTests")
+   Functions(1)=(FuncName="RunTestCase",InputParams=((ParamName="TestCase",ParamType="FTestCase")))
+   Functions(2)=(FuncName="ValidateSystem",InputParams=((ParamName="SystemName",ParamType="string")))
+   Functions(3)=(FuncName="GenerateTestReport")
+
+   // Test Cases Específicos
+   Functions(4)=(FuncName="TestSecuritySystem")
+   Functions(5)=(FuncName="TestInventorySystem")
+   Functions(6)=(FuncName="TestCustomerSimulation")
+   Functions(7)=(FuncName="TestIoTIntegration")
+
+   Events(0)=(EventName="OnTestComplete")
+   Events(1)=(EventName="OnTestFailed")
+   Events(2)=(EventName="OnAllTestsComplete")
+
+   DefaultSceneRoot=Root
+
+   Begin Implementation
+      Function BeginPlay
+         // Configurar ambiente de pruebas
+         SetupTestEnvironment
+         InitializeTestCases
+         if AutomatedTestingEnabled
+            RunAllTests
+         EndIf
+      EndFunction
+
+      Function RunAllTests
+         SetupTestEnvironment
+         
+         // Ejecutar pruebas por sistema
+         TestSecuritySystem
+         TestInventorySystem
+         TestCustomerSimulation
+         TestIoTIntegration
+         
+         GenerateTestReport
+         OnAllTestsComplete.Broadcast
+      EndFunction
+
+      Function TestSecuritySystem
+         // Pruebas de cámaras
+         TestCameraFunctionality
+         TestMotionDetection
+         TestRecording
+         
+         // Pruebas de alertas
+         TestSecurityAlerts
+         TestNotifications
+      EndFunction
+
+      Function TestInventorySystem
+         // Pruebas de stock
+         TestStockTracking
+         TestStockAlerts
+         
+         // Pruebas de productos
+         TestProductUpdates
+         TestProductVisibility
+      EndFunction
+
+      Function TestCustomerSimulation
+         // Pruebas de comportamiento
+         TestCustomerBehavior
+         TestPathfinding
+         TestInteractions
+         
+         // Pruebas de rendimiento
+         TestSimulationPerformance
+      EndFunction
+   End Implementation
+End Object 

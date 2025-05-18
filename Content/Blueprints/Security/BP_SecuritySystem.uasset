@@ -1,0 +1,74 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_SecuritySystem"
+   Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+   End Object
+   
+   // Variables
+   Variables(0)=(VarName="SecurityCameras",VarType="array",ElementType="BP_SecurityCamera")
+   Variables(1)=(VarName="CameraWidget",VarType="WBP_SecurityCameraView")
+   Variables(2)=(VarName="ControlPanel",VarType="WBP_SecurityControlPanel")
+   Variables(3)=(VarName="ActiveViewIndex",VarType="int",DefaultValue="0")
+   Variables(4)=(VarName="RecordingPath",VarType="string",DefaultValue="/Game/Recordings/")
+   Variables(5)=(VarName="GlobalAlertLevel",VarType="ECameraAlertLevel",DefaultValue="Normal")
+   Variables(6)=(VarName="AlertHistory",VarType="array",ElementType="FAlertData")
+   Variables(7)=(VarName="MotionDetectionEnabled",VarType="bool",DefaultValue="true")
+   Variables(8)=(VarName="NotificationsEnabled",VarType="bool",DefaultValue="true")
+   
+   // Funciones
+   Functions(0)=(FuncName="InitializeSecuritySystem")
+   Functions(1)=(FuncName="SwitchActiveCamera",InputParams=((ParamName="NewCameraIndex",ParamType="int")))
+   Functions(2)=(FuncName="UpdateAllCameraFeeds")
+   Functions(3)=(FuncName="HandleCameraRotation",InputParams=((ParamName="CameraIndex",ParamType="int"),(ParamName="Direction",ParamType="float")))
+   Functions(4)=(FuncName="HandleCameraZoom",InputParams=((ParamName="CameraIndex",ParamType="int"),(ParamName="ZoomFactor",ParamType="float")))
+   Functions(5)=(FuncName="StartGlobalRecording")
+   Functions(6)=(FuncName="StopGlobalRecording")
+   Functions(7)=(FuncName="HandleMotionDetection",InputParams=((ParamName="CameraIndex",ParamType="int"),(ParamName="Location",ParamType="Vector")))
+   Functions(8)=(FuncName="ProcessAlert",InputParams=((ParamName="AlertData",ParamType="FAlertData")))
+   Functions(9)=(FuncName="ExportRecordings",InputParams=((ParamName="StartTime",ParamType="DateTime"),(ParamName="EndTime",ParamType="DateTime")))
+   Functions(10)=(FuncName="UpdateControlPanel")
+   Functions(11)=(FuncName="SetGlobalAlertLevel",InputParams=((ParamName="NewLevel",ParamType="ECameraAlertLevel")))
+   
+   // Eventos
+   Events(0)=(EventName="OnCameraViewChanged")
+   Events(1)=(EventName="OnSecurityAlert")
+   Events(2)=(EventName="OnMotionDetected")
+   Events(3)=(EventName="OnRecordingStateChanged")
+   Events(4)=(EventName="OnSystemStatusChanged")
+   
+   DefaultSceneRoot=Root
+   
+   // Implementación
+   Begin Implementation
+      Function InitializeSecuritySystem
+         SpawnSecurityCameras
+         CreateCameraWidget
+         CreateControlPanel
+         SetupCameraLocations
+         InitializeRecording
+         StartMotionDetection
+      EndFunction
+      
+      Function ProcessAlert
+         AddToAlertHistory
+         UpdateControlPanel
+         If NotificationsEnabled
+            SendNotification
+         EndIf
+         BroadcastAlertEvent
+      EndFunction
+      
+      Function HandleMotionDetection
+         UpdateMotionLog
+         If MotionDetectionEnabled
+            StartRecordingAtCamera
+            TriggerAlert
+         EndIf
+      EndFunction
+      
+      Function UpdateControlPanel
+         UpdateCameraStatus
+         UpdateAlertStatus
+         UpdateRecordingStatus
+         RefreshEventLog
+      EndFunction
+   End Implementation
+End Object 

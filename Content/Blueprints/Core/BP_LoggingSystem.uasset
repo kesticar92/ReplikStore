@@ -1,0 +1,49 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_LoggingSystem"
+   Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+   End Object
+
+   Variables(0)=(VarName="LogLevel",VarType="ELogLevel",DefaultValue="Info")
+   Variables(1)=(VarName="LogBuffer",VarType="array",ElementType="FLogEntry")
+   Variables(2)=(VarName="MaxBufferSize",VarType="int32",DefaultValue="1000")
+   Variables(3)=(VarName="EnableFileLogging",VarType="bool",DefaultValue="true")
+   Variables(4)=(VarName="LogFilePath",VarType="string",DefaultValue="Logs/DigitalTwin")
+
+   Functions(0)=(FuncName="LogMessage",InputParams=((ParamName="Level",ParamType="ELogLevel"),(ParamName="Category",ParamType="string"),(ParamName="Message",ParamType="string")))
+   Functions(1)=(FuncName="LogAnalytics",InputParams=((ParamName="EventName",ParamType="string"),(ParamName="Parameters",ParamType="TMap<string,string>")))
+   Functions(2)=(FuncName="ExportLogs")
+   Functions(3)=(FuncName="ClearOldLogs")
+
+   Events(0)=(EventName="OnCriticalError")
+   Events(1)=(EventName="OnLogBufferFull")
+
+   DefaultSceneRoot=Root
+
+   Begin Implementation
+      Function BeginPlay
+         // Inicializar sistema de logging
+         InitializeLogging
+         SetupLogFile
+         StartLoggingService
+      EndFunction
+
+      Function LogMessage
+         CreateLogEntry
+         AddToBuffer
+         CheckBufferSize
+         
+         If Level == Critical
+            OnCriticalError.Broadcast
+         EndIf
+
+         If EnableFileLogging
+            WriteToFile
+         EndIf
+      EndFunction
+
+      Function LogAnalytics
+         FormatAnalyticsData
+         LogMessage(Info, "Analytics", FormattedData)
+         SendToAnalyticsSystem
+      EndFunction
+   End Implementation
+End Object 

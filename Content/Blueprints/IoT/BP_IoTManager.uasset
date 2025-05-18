@@ -1,0 +1,69 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_IoTManager"
+   Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+   End Object
+   
+   // Variables
+   Variables(0)=(VarName="SensorConnections",VarType="array",ElementType="FSensorConnection")
+   Variables(1)=(VarName="LastUpdateTime",VarType="DateTime")
+   Variables(2)=(VarName="UpdateInterval",VarType="float",DefaultValue="1.0")
+   Variables(3)=(VarName="ConnectionStatus",VarType="EConnectionStatus",DefaultValue="Connected")
+   Variables(4)=(VarName="SensorData",VarType="array",ElementType="FSensorReading")
+   Variables(5)=(VarName="ErrorLog",VarType="array",ElementType="FErrorEntry")
+   Variables(6)=(VarName="MQTTBroker",VarType="FMQTTConfig")
+   
+   // Funciones
+   Functions(0)=(FuncName="InitializeIoTSystem")
+   Functions(1)=(FuncName="ConnectToMQTTBroker")
+   Functions(2)=(FuncName="ProcessSensorData",InputParams=((ParamName="Data",ParamType="FSensorReading")))
+   Functions(3)=(FuncName="UpdateInventory",InputParams=((ParamName="SensorID",ParamType="string"),(ParamName="NewValue",ParamType="float")))
+   Functions(4)=(FuncName="HandleSensorError",InputParams=((ParamName="Error",ParamType="FErrorData")))
+   Functions(5)=(FuncName="ReconfigureSensor",InputParams=((ParamName="SensorID",ParamType="string"),(ParamName="Config",ParamType="FSensorConfig")))
+   Functions(6)=(FuncName="GenerateSensorReport")
+   Functions(7)=(FuncName="ValidateSensorData",InputParams=((ParamName="Data",ParamType="FSensorReading")))
+   
+   // Eventos
+   Events(0)=(EventName="OnSensorDataReceived")
+   Events(1)=(EventName="OnConnectionStatusChanged")
+   Events(2)=(EventName="OnSensorError")
+   Events(3)=(EventName="OnInventoryUpdated")
+   
+   DefaultSceneRoot=Root
+   
+   // Implementación
+   Begin Implementation
+      Function InitializeIoTSystem
+         ConfigureMQTT
+         InitializeSensors
+         StartUpdateLoop
+         ValidateConnections
+      EndFunction
+      
+      Function ProcessSensorData
+         ValidateData
+         If DataValid
+            UpdateInventorySystem
+            NotifySubscribers
+            LogReading
+         Else
+            HandleInvalidData
+         EndIf
+      EndFunction
+      
+      Function UpdateInventory
+         FindProduct
+         CalculateNewStock
+         UpdateDatabase
+         TriggerVisualUpdate
+         CheckThresholds
+      EndFunction
+      
+      Function HandleSensorError
+         LogError
+         NotifyAdmin
+         AttemptRecovery
+         If RecoveryFailed
+            DisableSensor
+         EndIf
+      EndFunction
+   End Implementation
+End Object 

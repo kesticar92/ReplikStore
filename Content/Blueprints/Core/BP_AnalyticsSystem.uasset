@@ -1,0 +1,47 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_AnalyticsSystem"
+   Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+   End Object
+
+   Variables(0)=(VarName="MetricsBuffer",VarType="array",ElementType="FMetricEntry")
+   Variables(1)=(VarName="AnalyticsConfig",VarType="FAnalyticsConfig",DefaultValue="(BatchSize=100,SendInterval=300.0)")
+   Variables(2)=(VarName="CustomMetrics",VarType="TMap<string,float>")
+   Variables(3)=(VarName="EnableRealTimeMetrics",VarType="bool",DefaultValue="true")
+
+   Functions(0)=(FuncName="TrackMetric",InputParams=((ParamName="MetricName",ParamType="string"),(ParamName="Value",ParamType="float")))
+   Functions(1)=(FuncName="TrackEvent",InputParams=((ParamName="EventName",ParamType="string"),(ParamName="Properties",ParamType="TMap<string,string>")))
+   Functions(2)=(FuncName="GenerateReport",InputParams=((ParamName="TimeRange",ParamType="FTimeRange")))
+   Functions(3)=(FuncName="ExportMetrics")
+
+   Events(0)=(EventName="OnMetricThresholdReached")
+   Events(1)=(EventName="OnReportGenerated")
+
+   DefaultSceneRoot=Root
+
+   Begin Implementation
+      Function TrackMetric
+         ValidateMetric
+         UpdateMetricValue
+         AddToBuffer
+         
+         If EnableRealTimeMetrics
+            UpdateRealTimeDisplays
+         EndIf
+
+         CheckThresholds
+      EndFunction
+
+      Function GenerateReport
+         CollectMetrics
+         AnalyzeData
+         FormatReport
+         OnReportGenerated.Broadcast
+      EndFunction
+
+      Function BeginPlay
+         // Inicializar analytics
+         InitializeAnalytics
+         SetupMetricsCollection
+         StartRealTimeTracking
+      EndFunction
+   End Implementation
+End Object 

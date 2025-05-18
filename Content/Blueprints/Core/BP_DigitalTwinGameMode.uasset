@@ -1,0 +1,128 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_DigitalTwinGameMode"
+   Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+   End Object
+   
+   // Sistemas Principales
+   Variables(0)=(VarName="InventoryManager",VarType="BP_InventoryManager")
+   Variables(1)=(VarName="IoTManager",VarType="BP_IoTManager")
+   Variables(2)=(VarName="LayoutEditor",VarType="BP_LayoutEditor")
+   Variables(3)=(VarName="CustomerSimulator",VarType="BP_CustomerSimulator")
+   Variables(4)=(VarName="SecuritySystem",VarType="BP_SecuritySystem")
+   
+   // UI Managers
+   Variables(5)=(VarName="ProductManager",VarType="WBP_ProductManager")
+   Variables(6)=(VarName="StockAlerts",VarType="WBP_StockAlerts")
+   Variables(7)=(VarName="HelpSystem",VarType="WBP_HelpSystem")
+   
+   // Estado Global
+   Variables(8)=(VarName="CurrentUserRole",VarType="EUserRole",DefaultValue="Visualizer")
+   Variables(9)=(VarName="SimulationSpeed",VarType="float",DefaultValue="1.0")
+   Variables(10)=(VarName="IsSimulationPaused",VarType="bool",DefaultValue="false")
+   Variables(11)=(VarName="ActiveCustomers",VarType="array",ElementType="BP_VirtualCustomer")
+   
+   // Funciones de Inicialización
+   Functions(0)=(FuncName="InitializeAllSystems")
+   Functions(1)=(FuncName="SetupEventHandlers")
+   Functions(2)=(FuncName="StartSimulation")
+   Functions(3)=(FuncName="PauseSimulation")
+   Functions(4)=(FuncName="ResumeSimulation")
+   
+   // Funciones de Integración
+   Functions(5)=(FuncName="HandleIoTUpdate",InputParams=((ParamName="SensorData",ParamType="FSensorReading")))
+   Functions(6)=(FuncName="HandleCustomerInteraction",InputParams=((ParamName="Customer",ParamType="BP_VirtualCustomer"),(ParamName="Product",ParamType="BP_ProductBase")))
+   Functions(7)=(FuncName="HandleStockAlert",InputParams=((ParamName="Product",ParamType="BP_ProductBase")))
+   Functions(8)=(FuncName="HandleLayoutChange",InputParams=((ParamName="NewLayout",ParamType="FStoreLayout")))
+   
+   // Eventos del Sistema
+   Events(0)=(EventName="OnSystemInitialized")
+   Events(1)=(EventName="OnSimulationStateChanged")
+   Events(2)=(EventName="OnUserRoleChanged")
+   Events(3)=(EventName="OnSystemError")
+   
+   DefaultSceneRoot=Root
+   
+   // Implementación
+   Begin Implementation
+      Function InitializeAllSystems
+         // Inicializar Managers
+         SpawnAndInitializeInventoryManager
+         SpawnAndInitializeIoTManager
+         SpawnAndInitializeLayoutEditor
+         SpawnAndInitializeSecuritySystem
+         
+         // Configurar UI
+         CreateAndSetupProductManager
+         CreateAndSetupStockAlerts
+         CreateAndSetupHelpSystem
+         
+         // Configurar Simulación
+         InitializeCustomerSimulation
+         SetupEventBindings
+         
+         OnSystemInitialized.Broadcast
+      EndFunction
+      
+      Function HandleIoTUpdate
+         // Actualizar Inventario
+         UpdateInventorySystem(SensorData)
+         
+         // Actualizar Visualización
+         UpdateProductVisuals
+         
+         // Verificar Alertas
+         CheckStockLevels
+         
+         // Notificar UI
+         UpdateUIElements
+      EndFunction
+      
+      Function HandleCustomerInteraction
+         // Registrar Interacción
+         LogCustomerBehavior
+         
+         // Actualizar Estadísticas
+         UpdateProductStatistics
+         
+         // Verificar Stock
+         CheckProductAvailability
+         
+         // Actualizar UI
+         RefreshDisplays
+      EndFunction
+      
+      Function HandleStockAlert
+         // Notificar Sistema
+         TriggerStockAlert
+         
+         // Actualizar UI
+         UpdateAlertDisplay
+         
+         // Notificar IoT
+         SyncWithSensors
+         
+         // Registrar Evento
+         LogAlertEvent
+      EndFunction
+      
+      Function HandleLayoutChange
+         // Validar Cambios
+         ValidateNewLayout
+         
+         // Actualizar Posiciones
+         UpdateProductPositions
+         
+         // Recalcular Rutas
+         UpdateCustomerPaths
+         
+         // Sincronizar IoT
+         UpdateSensorLocations
+      EndFunction
+      
+      Function BeginPlay
+         // Inicializar sistemas
+         InitializeAllSystems
+         SetupEventHandlers
+         StartSimulation
+      EndFunction
+   End Implementation
+End Object 

@@ -1,0 +1,25 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BPI_SystemEvents"
+   // Eventos de Seguridad
+   Events(0)=(EventName="OnSecurityAlert",Params=((Name="AlertType",Type="ESecurityAlertType"),(Name="Location",Type="FVector")))
+   Events(1)=(EventName="OnCameraStateChanged",Params=((Name="CameraID",Type="int32"),(Name="NewState",Type="ECameraState")))
+
+   // Eventos de Inventario
+   Events(2)=(EventName="OnStockLevelChanged",Params=((Name="ProductID",Type="FString"),(Name="NewLevel",Type="int32")))
+   Events(3)=(EventName="OnProductMoved",Params=((Name="ProductID",Type="FString"),(Name="NewLocation",Type="FVector")))
+
+   // Eventos de Clientes
+   Events(4)=(EventName="OnCustomerInteraction",Params=((Name="CustomerID",Type="int32"),(Name="ProductID",Type="FString"),(Name="InteractionType",Type="EInteractionType")))
+   Events(5)=(EventName="OnCustomerPathUpdated",Params=((Name="CustomerID",Type="int32"),(Name="NewPath",Type="array")))
+
+   // Eventos IoT
+   Events(6)=(EventName="OnSensorUpdate",Params=((Name="SensorID",Type="FString"),(Name="Data",Type="FSensorData")))
+   Events(7)=(EventName="OnIoTConnectionStateChanged",Params=((Name="Connected",Type="bool")))
+
+   // Eventos de Layout
+   Events(8)=(EventName="OnLayoutChanged",Params=((Name="NewLayout",Type="FStoreLayout")))
+   Events(9)=(EventName="OnLayoutValidationFailed",Params=((Name="Errors",Type="array")))
+
+   // Eventos de Sistema
+   Events(10)=(EventName="OnSystemStateChanged",Params=((Name="NewState",Type="ESystemState")))
+   Events(11)=(EventName="OnPerformanceAlert",Params=((Name="MetricType",Type="EPerformanceMetric"),(Name="Value",Type="float")))
+End Object 

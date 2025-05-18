@@ -1,0 +1,102 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_SystemConfig"
+   // Configuración de Red
+   Variables(0)=(VarName="MQTTConfig",VarType="FMQTTSettings",DefaultValue="(BrokerURL='mqtt://localhost:1883',ClientID='DigitalTwin',Username='',Password='')")
+   Variables(1)=(VarName="APIEndpoints",VarType="FAPIConfig",DefaultValue="(BaseURL='http://localhost:3000',APIVersion='v1')")
+   
+   // Configuración de Simulación
+   Variables(2)=(VarName="SimulationSettings",VarType="FSimConfig",DefaultValue="(CustomerSpawnRate=60.0,MaxCustomers=20,SimulationSpeed=1.0)")
+   Variables(3)=(VarName="CustomerProfiles",VarType="array",ElementType="FCustomerProfile")
+   
+   // Configuración de Seguridad
+   Variables(4)=(VarName="SecurityConfig",VarType="FSecuritySettings",DefaultValue="(RecordingEnabled=true,MotionDetectionSensitivity=0.5)")
+   Variables(5)=(VarName="AuthConfig",VarType="FAuthSettings",DefaultValue="(TokenExpiration=3600,RefreshEnabled=true)")
+   
+   // Configuración de UI
+   Variables(6)=(VarName="UISettings",VarType="FUIConfig",DefaultValue="(Theme='Dark',Language='es',RefreshRate=1.0)")
+   Variables(7)=(VarName="AlertSettings",VarType="FAlertConfig",DefaultValue="(StockThreshold=5,NotificationDelay=300)")
+   
+   // Configuración de IoT
+   Variables(8)=(VarName="SensorConfig",VarType="FSensorSettings",DefaultValue="(UpdateInterval=1.0,BatchSize=10)")
+   Variables(9)=(VarName="DeviceMapping",VarType="array",ElementType="FDeviceMap")
+   
+   // Configuración de Base de Datos
+   Variables(10)=(VarName="DatabaseConfig",VarType="FDBSettings",DefaultValue="(ConnectionString='mongodb://localhost:27017',Database='digitaltwin')")
+   
+   // Funciones de Configuración
+   Functions(0)=(FuncName="LoadConfiguration")
+   Functions(1)=(FuncName="SaveConfiguration")
+   Functions(2)=(FuncName="ValidateConfiguration")
+   Functions(3)=(FuncName="ApplyConfiguration")
+   Functions(4)=(FuncName="ResetToDefaults")
+   
+   // Funciones de Integración
+   Functions(5)=(FuncName="ConfigureIoTSystem")
+   Functions(6)=(FuncName="ConfigureSecuritySystem")
+   Functions(7)=(FuncName="ConfigureSimulation")
+   Functions(8)=(FuncName="ConfigureUI")
+   Functions(9)=(FuncName="ConfigureDatabase")
+   
+   // Eventos
+   Events(0)=(EventName="OnConfigurationLoaded")
+   Events(1)=(EventName="OnConfigurationSaved")
+   Events(2)=(EventName="OnConfigurationError")
+   Events(3)=(EventName="OnConfigurationChanged")
+   
+   // Implementación
+   Begin Implementation
+      Function LoadConfiguration
+         LoadFromFile
+         ValidateSettings
+         ApplyToSystems
+         NotifyConfigurationLoaded
+      EndFunction
+      
+      Function ApplyConfiguration
+         // Aplicar configuración a cada sistema
+         ConfigureIoTSystem
+         ConfigureSecuritySystem
+         ConfigureSimulation
+         ConfigureUI
+         ConfigureDatabase
+         
+         // Validar integración
+         ValidateIntegration
+         
+         // Notificar cambios
+         BroadcastConfigurationChanged
+      EndFunction
+      
+      Function ConfigureIoTSystem
+         // Configurar MQTT
+         SetupMQTTBroker
+         ConfigureSensors
+         SetupDeviceMapping
+         
+         // Configurar actualización en tiempo real
+         SetupRealTimeUpdates
+         ConfigureDataValidation
+      EndFunction
+      
+      Function ConfigureSecuritySystem
+         // Configurar cámaras
+         SetupCameras
+         ConfigureRecording
+         SetupMotionDetection
+         
+         // Configurar alertas
+         SetupSecurityAlerts
+         ConfigureNotifications
+      EndFunction
+      
+      Function ConfigureSimulation
+         // Configurar simulación de clientes
+         SetupCustomerProfiles
+         ConfigureSpawnRates
+         SetupBehaviorPatterns
+         
+         // Configurar interacciones
+         SetupProductInteractions
+         ConfigureDecisionMaking
+      EndFunction
+   End Implementation
+End Object 

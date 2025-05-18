@@ -1,0 +1,114 @@
+Begin Object Class=/Script/UMG.WidgetBlueprint Name="WBP_ProductManager"
+   Begin Object Class=/Script/UMG.CanvasPanel Name="RootCanvas"
+   End Object
+   
+   Begin Object Class=/Script/UMG.Border Name="MainBorder"
+      BorderBrush=(R=0.122,G=0.306,B=0.475,A=1.000) // #1F4E79
+      Background=(R=0.95,G=0.95,B=0.95,A=1.000)
+   End Object
+   
+   // Menú Lateral
+   Begin Object Class=/Script/UMG.VerticalBox Name="SideMenu"
+      Begin Object Class=/Script/UMG.Button Name="InventoryButton"
+         Content=(Text="Inventario")
+      End Object
+      Begin Object Class=/Script/UMG.Button Name="AlertsButton"
+         Content=(Text="Alertas")
+      End Object
+      Begin Object Class=/Script/UMG.Button Name="ReportsButton"
+         Content=(Text="Reportes")
+      End Object
+      Begin Object Class=/Script/UMG.Button Name="SettingsButton"
+         Content=(Text="Configuración")
+      End Object
+   End Object
+   
+   // Panel Principal
+   Begin Object Class=/Script/UMG.WidgetSwitcher Name="MainPanel"
+      // Vista de Inventario
+      Begin Object Class=/Script/UMG.VerticalBox Name="InventoryView"
+         Begin Object Class=/Script/UMG.HorizontalBox Name="SearchBar"
+            Begin Object Class=/Script/UMG.EditableTextBox Name="SearchInput"
+               HintText="Buscar productos..."
+            End Object
+            Begin Object Class=/Script/UMG.ComboBox Name="CategoryDropdown"
+               ToolTipText="Filtrar por categoría"
+            End Object
+         End Object
+         
+         Begin Object Class=/Script/UMG.ScrollBox Name="ProductList"
+         End Object
+         
+         Begin Object Class=/Script/UMG.Button Name="AddProductButton"
+            Content=(Text="Añadir Producto")
+         End Object
+      End Object
+      
+      // Vista de Producto Individual
+      Begin Object Class=/Script/UMG.VerticalBox Name="ProductDetailView"
+         Begin Object Class=/Script/UMG.Image Name="ProductImage"
+         End Object
+         Begin Object Class=/Script/UMG.EditableTextBox Name="ProductName"
+         End Object
+         Begin Object Class=/Script/UMG.EditableTextBox Name="ProductDescription"
+         End Object
+         Begin Object Class=/Script/UMG.SpinBox Name="StockInput"
+         End Object
+         Begin Object Class=/Script/UMG.SpinBox Name="PriceInput"
+         End Object
+         Begin Object Class=/Script/UMG.ComboBox Name="LocationDropdown"
+         End Object
+      End Object
+      
+      // Vista de Reportes
+      Begin Object Class=/Script/UMG.VerticalBox Name="ReportsView"
+         Begin Object Class=/Script/UMG.ComboBox Name="ReportType"
+            Options=["Inventario", "Ventas", "Stock Bajo"]
+         End Object
+         Begin Object Class=/Script/UMG.DatePicker Name="DateRange"
+         End Object
+         Begin Object Class=/Script/UMG.Button Name="GenerateReport"
+            Content=(Text="Generar Reporte")
+         End Object
+      End Object
+   End Object
+   
+   // Variables
+   Variables(0)=(VarName="CurrentView",VarType="EViewType",DefaultValue="Inventory")
+   Variables(1)=(VarName="SelectedProduct",VarType="BP_ProductBase")
+   Variables(2)=(VarName="FilteredProducts",VarType="array",ElementType="BP_ProductBase")
+   Variables(3)=(VarName="SearchQuery",VarType="string")
+   
+   // Funciones
+   Functions(0)=(FuncName="SwitchView",InputParams=((ParamName="NewView",ParamType="EViewType")))
+   Functions(1)=(FuncName="UpdateProductList")
+   Functions(2)=(FuncName="ShowProductDetails",InputParams=((ParamName="Product",ParamType="BP_ProductBase")))
+   Functions(3)=(FuncName="SaveProductChanges")
+   Functions(4)=(FuncName="GenerateProductReport")
+   Functions(5)=(FuncName="HandleSearch",InputParams=((ParamName="SearchText",ParamType="string")))
+   
+   // Implementación
+   Begin Implementation
+      Function UpdateProductList
+         ClearCurrentList
+         LoadFilteredProducts
+         UpdateListView
+         ApplyFilters
+      EndFunction
+      
+      Function ShowProductDetails
+         LoadProductData
+         UpdateDetailView
+         SwitchView(ProductDetail)
+      EndFunction
+      
+      Function SaveProductChanges
+         ValidateInputs
+         UpdateDatabase
+         RefreshProductList
+         ShowSuccessMessage
+      EndFunction
+   End Implementation
+   
+   WidgetTree=RootCanvas
+End Object 

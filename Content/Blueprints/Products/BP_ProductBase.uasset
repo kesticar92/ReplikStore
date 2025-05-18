@@ -1,0 +1,74 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_ProductBase"
+   Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+   End Object
+   Begin Object Class=/Script/Engine.StaticMeshComponent Name="ProductMesh"
+      StaticMesh=/Engine/BasicShapes/Cube
+   End Object
+   Begin Object Class=/Script/Engine.BoxComponent Name="InteractionVolume"
+      BoxExtent=(X=50.0,Y=50.0,Z=50.0)
+   End Object
+   Begin Object Class=/Script/UMG.WidgetComponent Name="InfoWidget"
+      Space=Screen
+      DrawSize=(X=150.0,Y=100.0)
+   End Object
+   
+   // Variables del Producto
+   Variables(0)=(VarName="ProductID",VarType="string")
+   Variables(1)=(VarName="ProductName",VarType="string")
+   Variables(2)=(VarName="Description",VarType="string")
+   Variables(3)=(VarName="Price",VarType="float",DefaultValue="0.0")
+   Variables(4)=(VarName="CurrentStock",VarType="int",DefaultValue="0")
+   Variables(5)=(VarName="MinStockLevel",VarType="int",DefaultValue="5")
+   Variables(6)=(VarName="Location3D",VarType="FVector")
+   Variables(7)=(VarName="ShelfPosition",VarType="FString")
+   Variables(8)=(VarName="IsHighlighted",VarType="bool",DefaultValue="false")
+   Variables(9)=(VarName="StockStatus",VarType="EStockStatus",DefaultValue="Normal")
+   Variables(10)=(VarName="LastUpdated",VarType="DateTime")
+   
+   // Funciones
+   Functions(0)=(FuncName="UpdateStock",InputParams=((ParamName="NewStock",ParamType="int")))
+   Functions(1)=(FuncName="UpdatePrice",InputParams=((ParamName="NewPrice",ParamType="float")))
+   Functions(2)=(FuncName="HighlightProduct",InputParams=((ParamName="ShouldHighlight",ParamType="bool")))
+   Functions(3)=(FuncName="UpdateVisuals")
+   Functions(4)=(FuncName="CheckStockLevel")
+   Functions(5)=(FuncName="ShowProductInfo")
+   Functions(6)=(FuncName="HideProductInfo")
+   Functions(7)=(FuncName="UpdateFromDatabase")
+   
+   // Eventos
+   Events(0)=(EventName="OnStockChanged")
+   Events(1)=(EventName="OnPriceChanged")
+   Events(2)=(EventName="OnStockLow")
+   Events(3)=(EventName="OnInteractionBegin")
+   Events(4)=(EventName="OnInteractionEnd")
+   
+   DefaultSceneRoot=Root
+   
+   // Implementación
+   Begin Implementation
+      Function UpdateStock
+         SetCurrentStock
+         CheckStockLevel
+         UpdateVisuals
+         OnStockChanged.Broadcast
+      EndFunction
+      
+      Function CheckStockLevel
+         If CurrentStock <= MinStockLevel
+            StockStatus = Low
+            OnStockLow.Broadcast
+         Else
+            StockStatus = Normal
+         EndIf
+         UpdateVisuals
+      EndFunction
+      
+      Function UpdateVisuals
+         UpdateMaterialColors
+         UpdateInfoWidget
+         If IsHighlighted
+            ApplyHighlight
+         EndIf
+      EndFunction
+   End Implementation
+End Object 

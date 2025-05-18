@@ -1,0 +1,44 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_TestReporter"
+   Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+   End Object
+
+   Variables(0)=(VarName="TestResults",VarType="array",ElementType="FTestResult")
+   Variables(1)=(VarName="PerformanceMetrics",VarType="TMap<FString,float>")
+   Variables(2)=(VarName="ErrorLog",VarType="array",ElementType="FErrorEntry")
+   Variables(3)=(VarName="ReportFormat",VarType="EReportFormat",DefaultValue="HTML")
+
+   Functions(0)=(FuncName="GenerateTestReport")
+   Functions(1)=(FuncName="LogTestResult",InputParams=((ParamName="TestName",ParamType="FString"),(ParamName="Result",ParamType="FTestResult")))
+   Functions(2)=(FuncName="ExportReport",InputParams=((ParamName="Format",ParamType="EReportFormat")))
+   Functions(3)=(FuncName="AnalyzeResults")
+
+   Begin Implementation
+      Function GenerateTestReport
+         // Recopilar resultados
+         CollectTestResults
+         
+         // Analizar métricas
+         AnalyzePerformance
+         
+         // Generar resumen
+         GenerateSummary
+         
+         // Exportar reporte
+         ExportReport
+      EndFunction
+
+      Function AnalyzeResults
+         // Análisis de éxito/fallo
+         CalculateSuccessRate
+         
+         // Análisis de rendimiento
+         AnalyzePerformanceMetrics
+         
+         // Identificar patrones
+         IdentifyTestPatterns
+         
+         // Generar recomendaciones
+         GenerateRecommendations
+      EndFunction
+   End Implementation
+End Object 

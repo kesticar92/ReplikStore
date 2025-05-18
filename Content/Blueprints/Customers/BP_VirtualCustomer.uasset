@@ -1,0 +1,84 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_VirtualCustomer"
+   Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+   End Object
+   Begin Object Class=/Script/Engine.SkeletalMeshComponent Name="CustomerMesh"
+   End Object
+   Begin Object Class=/Script/Engine.CharacterMovementComponent Name="CustomerMovement"
+      bOrientRotationToMovement=true
+      RotationRate=(Yaw=360.0)
+      WalkSpeed=150.0
+   End Object
+   Begin Object Class=/Script/Engine.SphereComponent Name="InteractionSphere"
+      SphereRadius=100.0
+   End Object
+   
+   // Variables
+   Variables(0)=(VarName="ShoppingList",VarType="array",ElementType="FShoppingItem")
+   Variables(1)=(VarName="CurrentTarget",VarType="FVector")
+   Variables(2)=(VarName="BehaviorState",VarType="ECustomerState",DefaultValue="Browsing")
+   Variables(3)=(VarName="TimeInStore",VarType="float",DefaultValue="0.0")
+   Variables(4)=(VarName="InteractionDelay",VarType="float",DefaultValue="2.0")
+   Variables(5)=(VarName="ShoppingCart",VarType="array",ElementType="BP_ProductBase")
+   Variables(6)=(VarName="CustomerProfile",VarType="FCustomerProfile")
+   
+   // Funciones
+   Functions(0)=(FuncName="InitializeCustomer",InputParams=((ParamName="Profile",ParamType="FCustomerProfile")))
+   Functions(1)=(FuncName="GenerateShoppingList")
+   Functions(2)=(FuncName="FindNextTarget")
+   Functions(3)=(FuncName="InteractWithProduct",InputParams=((ParamName="Product",ParamType="BP_ProductBase")))
+   Functions(4)=(FuncName="AddToCart",InputParams=((ParamName="Product",ParamType="BP_ProductBase")))
+   Functions(5)=(FuncName="SimulateDecision",OutputParams=((ParamName="WillBuy",ParamType="bool")))
+   Functions(6)=(FuncName="NavigateToCheckout")
+   Functions(7)=(FuncName="UpdateBehavior")
+   
+   // Eventos
+   Events(0)=(EventName="OnProductInteraction")
+   Events(1)=(EventName="OnPurchaseDecision")
+   Events(2)=(EventName="OnCheckout")
+   Events(3)=(EventName="OnBehaviorChanged")
+   
+   DefaultSceneRoot=Root
+   
+   // Implementación
+   Begin Implementation
+      Function InitializeCustomer
+         SetCustomerProfile
+         GenerateShoppingList
+         SetInitialState
+         StartBehaviorLoop
+      EndFunction
+      
+      Function UpdateBehavior
+         Switch BehaviorState
+            Case Browsing:
+               SimulateBrowsing
+               Break
+            Case Searching:
+               SearchForProduct
+               Break
+            Case Examining:
+               ExamineProduct
+               Break
+            Case Purchasing:
+               ProcessPurchase
+               Break
+         EndSwitch
+      EndFunction
+      
+      Function SimulateDecision
+         ConsiderPrice
+         ConsiderNeed
+         ConsiderBudget
+         Return CalculatePurchaseProbability
+      EndFunction
+      
+      Function InteractWithProduct
+         UpdateProductStats
+         SimulateExamination
+         MakeDecision
+         If DecisionPositive
+            AddToCart
+         EndIf
+      EndFunction
+   End Implementation
+End Object 

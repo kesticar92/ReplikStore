@@ -1,0 +1,44 @@
+Begin Object Class=/Script/UMG.WidgetBlueprint Name="WBP_SecurityCameraView"
+   Begin Object Class=/Script/UMG.CanvasPanel Name="RootCanvas"
+   End Object
+   
+   Begin Object Class=/Script/UMG.Border Name="MainBorder"
+      BorderBrush=(R=0.122,G=0.306,B=0.475,A=1.000) // #1F4E79
+      Background=(R=0.95,G=0.95,B=0.95,A=1.000) // Fondo gris claro
+   End Object
+   
+   Begin Object Class=/Script/UMG.GridPanel Name="CameraGrid"
+      ColumnCount=2
+      RowCount=2
+   End Object
+   
+   Begin Object Class=/Script/UMG.Button Name="ZoomInButton"
+      WidgetStyle=(Normal=(ImageSize=(X=32.0,Y=32.0)))
+      ToolTipText="Acercar cámara"
+   End Object
+   
+   Begin Object Class=/Script/UMG.Button Name="ZoomOutButton"
+      WidgetStyle=(Normal=(ImageSize=(X=32.0,Y=32.0)))
+      ToolTipText="Alejar cámara"
+   End Object
+   
+   Begin Object Class=/Script/UMG.Button Name="RotateLeftButton"
+      WidgetStyle=(Normal=(ImageSize=(X=32.0,Y=32.0)))
+      ToolTipText="Rotar izquierda"
+   End Object
+   
+   Begin Object Class=/Script/UMG.Button Name="RotateRightButton"
+      WidgetStyle=(Normal=(ImageSize=(X=32.0,Y=32.0)))
+      ToolTipText="Rotar derecha"
+   End Object
+   
+   // Variables
+   Variables(0)=(VarName="ActiveCameraIndex",VarType="int",DefaultValue="0")
+   Variables(1)=(VarName="CameraFeeds",VarType="array",ElementType="TextureRenderTarget2D")
+   
+   // Funciones
+   Functions(0)=(FuncName="SwitchCamera",InputParams=((ParamName="CameraIndex",ParamType="int")))
+   Functions(1)=(FuncName="UpdateCameraFeed")
+   
+   WidgetTree=RootCanvas
+End Object 

@@ -1,0 +1,104 @@
+Begin Object Class=/Script/UMG.WidgetBlueprint Name="WBP_HelpSystem"
+   Begin Object Class=/Script/UMG.CanvasPanel Name="RootCanvas"
+   End Object
+   
+   Begin Object Class=/Script/UMG.Border Name="MainBorder"
+      BorderBrush=(R=0.122,G=0.306,B=0.475,A=1.000) // #1F4E79
+      Background=(R=0.95,G=0.95,B=0.95,A=1.000)
+   End Object
+   
+   // Panel Principal
+   Begin Object Class=/Script/UMG.WidgetSwitcher Name="ContentSwitcher"
+      // Manual de Usuario
+      Begin Object Class=/Script/UMG.VerticalBox Name="ManualView"
+         Begin Object Class=/Script/UMG.TreeView Name="ContentTree"
+         End Object
+         Begin Object Class=/Script/UMG.ScrollBox Name="ContentDisplay"
+         End Object
+      End Object
+      
+      // Ayuda Interactiva
+      Begin Object Class=/Script/UMG.VerticalBox Name="InteractiveHelp"
+         Begin Object Class=/Script/UMG.Border Name="TutorialPanel"
+         End Object
+         Begin Object Class=/Script/UMG.Button Name="NextStepButton"
+            Content=(Text="Siguiente")
+         End Object
+      End Object
+      
+      // Soporte en Línea
+      Begin Object Class=/Script/UMG.VerticalBox Name="OnlineSupport"
+         Begin Object Class=/Script/UMG.EditableTextBox Name="QueryInput"
+            HintText="¿En qué podemos ayudarte?"
+         End Object
+         Begin Object Class=/Script/UMG.Button Name="SendQueryButton"
+            Content=(Text="Enviar")
+         End Object
+         Begin Object Class=/Script/UMG.ScrollBox Name="ChatHistory"
+         End Object
+      End Object
+   End Object
+   
+   // Menú de Navegación
+   Begin Object Class=/Script/UMG.HorizontalBox Name="NavigationMenu"
+      Begin Object Class=/Script/UMG.Button Name="ManualButton"
+         Content=(Text="Manual")
+      End Object
+      Begin Object Class=/Script/UMG.Button Name="TutorialButton"
+         Content=(Text="Tutorial")
+      End Object
+      Begin Object Class=/Script/UMG.Button Name="SupportButton"
+         Content=(Text="Soporte")
+      End Object
+   End Object
+   
+   // Variables
+   Variables(0)=(VarName="CurrentSection",VarType="string")
+   Variables(1)=(VarName="TutorialStep",VarType="int",DefaultValue="0")
+   Variables(2)=(VarName="ManualContent",VarType="array",ElementType="FHelpSection")
+   Variables(3)=(VarName="TutorialData",VarType="array",ElementType="FTutorialStep")
+   Variables(4)=(VarName="SupportHistory",VarType="array",ElementType="FChatMessage")
+   Variables(5)=(VarName="IsConnected",VarType="bool",DefaultValue="false")
+   
+   // Funciones
+   Functions(0)=(FuncName="LoadManualContent")
+   Functions(1)=(FuncName="StartTutorial",InputParams=((ParamName="TutorialID",ParamType="string")))
+   Functions(2)=(FuncName="ShowNextTutorialStep")
+   Functions(3)=(FuncName="SendSupportQuery",InputParams=((ParamName="Query",ParamType="string")))
+   Functions(4)=(FuncName="SearchManual",InputParams=((ParamName="SearchTerm",ParamType="string")))
+   Functions(5)=(FuncName="GeneratePDF",InputParams=((ParamName="Section",ParamType="string")))
+   
+   // Implementación
+   Begin Implementation
+      Function LoadManualContent
+         FetchContent
+         BuildNavigationTree
+         LoadImages
+         SetupLinks
+      EndFunction
+      
+      Function StartTutorial
+         LoadTutorialData
+         ResetProgress
+         HighlightFirstStep
+         ShowInstructions
+      EndFunction
+      
+      Function ShowNextTutorialStep
+         UpdateProgress
+         HighlightNextElement
+         UpdateInstructions
+         CheckCompletion
+      EndFunction
+      
+      Function SendSupportQuery
+         ValidateConnection
+         FormatQuery
+         SendToServer
+         UpdateChatHistory
+         HandleResponse
+      EndFunction
+   End Implementation
+   
+   WidgetTree=RootCanvas
+End Object 

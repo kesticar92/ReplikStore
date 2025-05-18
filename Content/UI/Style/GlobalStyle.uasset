@@ -1,0 +1,23 @@
+Begin Object Class=/Script/UMG.WidgetStyle Name="GlobalStyle"
+   Begin Object Class=/Script/SlateCore.SlateWidgetStyle Name="BaseStyle"
+   End Object
+
+   Variables(0)=(VarName="PrimaryColor",VarType="FLinearColor",DefaultValue="(R=0.12156862745098,G=0.30588235294118,B=0.47450980392157,A=1.0)")
+   Variables(1)=(VarName="SecondaryColor",VarType="FLinearColor",DefaultValue="(R=0.95,G=0.95,B=0.95,A=1.0)")
+   Variables(2)=(VarName="AccentColor",VarType="FLinearColor",DefaultValue="(R=0.2,G=0.6,B=0.8,A=1.0)")
+   Variables(3)=(VarName="TextColor",VarType="FLinearColor",DefaultValue="(R=0.1,G=0.1,B=0.1,A=1.0)")
+
+   // Estilos de Botones
+   Variables(4)=(VarName="ButtonNormalStyle",VarType="FButtonStyle",DefaultValue="(Normal=(TintColor=(R=0.12156862745098,G=0.30588235294118,B=0.47450980392157,A=1.0)))")
+   Variables(5)=(VarName="ButtonHoverStyle",VarType="FButtonStyle",DefaultValue="(Normal=(TintColor=(R=0.15,G=0.35,B=0.52,A=1.0)))")
+   
+   // Estilos de Paneles
+   Variables(6)=(VarName="PanelStyle",VarType="FPanelStyle",DefaultValue="(Background=(TintColor=(R=0.95,G=0.95,B=0.95,A=1.0)))")
+   Variables(7)=(VarName="HeaderStyle",VarType="FHeaderStyle",DefaultValue="(Background=(TintColor=(R=0.12156862745098,G=0.30588235294118,B=0.47450980392157,A=1.0)))")
+
+   // Estilos de Texto
+   Variables(8)=(VarName="HeaderTextStyle",VarType="FTextStyle",DefaultValue="(Color=(R=1.0,G=1.0,B=1.0,A=1.0),Size=24)")
+   Variables(9)=(VarName="BodyTextStyle",VarType="FTextStyle",DefaultValue="(Color=(R=0.1,G=0.1,B=0.1,A=1.0),Size=16)")
+
+   DefaultStyle=BaseStyle
+End Object 
