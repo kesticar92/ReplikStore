@@ -48,7 +48,39 @@ DerivedDataCache/
 *.user
 *.userosscache
 *.sln.docstates
+*.uasset
+*.umap
+*.ubulk
+*.uexp
+*.bak
+*.tmp
+*.pdb
+*.dll
+*.exe
+*.app
+*.dylib
+*.target
+*.build
+*.o
+*.a
+*.lib
+*.exp
+*.ipa
+*.xcuserstate
+*.xcuserdata/
+
+# Binarios y builds Unreal/Mac
+Binaries/
+Build/
+*.app/
+*.dSYM/
 
 # Métricas y monitoreo
 grafana/
-prometheus/data/ 
+prometheus/data/
+
+# Documentación generada
+/docs/api/
+
+# Otros
+coverage/ 
