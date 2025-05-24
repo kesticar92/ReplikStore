@@ -1,41 +1,107 @@
 const express = require('express');
 const cors = require('cors');
+const { expressjwt: jwt } = require('express-jwt');
+const path = require('path');
 const promClient = require('prom-client');
-const jwt = require('jsonwebtoken');
-const { expressjwt: expressJwt } = require('express-jwt');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
+
+// Importar rutas
+const authRoutes = require('./routes/auth');
+const productRoutes = require('./routes/products');
+const inventoryRoutes = require('./routes/inventory');
+const sensorRoutes = require('./routes/sensorRoutes');
+const analyticsRoutes = require('./routes/analytics');
 
 const app = express();
 
-// Métricas de Prometheus
+// Configuración de métricas Prometheus
 const collectDefaultMetrics = promClient.collectDefaultMetrics;
 collectDefaultMetrics({ timeout: 5000 });
 
-// Contadores personalizados
-const httpRequestDurationMicroseconds = new promClient.Histogram({
-    name: 'http_request_duration_seconds',
-    help: 'Duration of HTTP requests in seconds',
-    labelNames: ['method', 'route', 'code'],
-    buckets: [0.1, 0.5, 1, 5]
-});
-
-// Middleware
-app.use(cors());
+// Middleware de seguridad y utilidades
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Middleware de autenticación
-const jwtMiddleware = expressJwt({
-    secret: process.env.JWT_SECRET || 'your-secret-key',
-    algorithms: ['HS256']
+// Configuración de CORS
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:3000'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
+  credentials: true
+}));
+
+// Documentación Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Servir archivos estáticos
+app.use('/static', express.static(path.join(__dirname, '../Assets')));
+
+// Rutas públicas primero
+app.use('/api/auth', authRoutes);
+
+// Protección JWT para rutas protegidas
+const jwtMiddleware = jwt({
+  secret: process.env.JWT_SECRET || 'your-secret-key',
+  algorithms: ['HS256'],
+  credentialsRequired: true,
+  requestProperty: 'auth',
+  getToken: function fromHeaderOrQuerystring(req) {
+    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+      return req.headers.authorization.split(' ')[1];
+    } else if (req.query && req.query.token) {
+      return req.query.token;
+    }
+    return null;
+  }
 }).unless({
-    path: [
-        '/api/auth/login',
-        '/api/auth/register',
-        '/metrics'
-    ]
+  path: [
+    '/api/auth/login',
+    '/api/auth/register',
+    '/api/auth/test-token',
+    '/metrics',
+    '/api-docs',
+    '/api-docs/*',
+    { url: /^\/static\/.*/, methods: ['GET'] }
+  ]
 });
 
-app.use(jwtMiddleware);
+// Middleware de autenticación
+app.use('/api', jwtMiddleware);
+
+// Middleware de verificación de roles
+const checkRole = (roles) => {
+  return (req, res, next) => {
+    if (!req.auth) {
+      return res.status(401).json({
+        success: false,
+        message: 'No autenticado'
+      });
+    }
+    
+    if (!roles.includes(req.auth.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No autorizado para esta operación'
+      });
+    }
+    next();
+  };
+};
+
+// Rutas protegidas con roles
+app.use('/api/products', checkRole(['admin', 'operator']), productRoutes);
+app.use('/api/inventory', checkRole(['admin', 'operator']), inventoryRoutes);
+app.use('/api/sensors', checkRole(['admin', 'operator', 'viewer']), sensorRoutes);
+app.use('/api/analytics', checkRole(['admin', 'viewer']), analyticsRoutes);
 
 // Endpoint de métricas
 app.get('/metrics', async (req, res) => {
@@ -44,32 +110,24 @@ app.get('/metrics', async (req, res) => {
     res.send(metrics);
 });
 
-// Middleware de métricas
-app.use((req, res, next) => {
-    const end = httpRequestDurationMicroseconds.startTimer();
-    res.on('finish', () => {
-        end({
-            method: req.method,
-            route: req.route?.path || req.path,
-            code: res.statusCode
-        });
-    });
-    next();
-});
-
-// Rutas
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/products', require('./routes/products'));
-app.use('/api/inventory', require('./routes/inventory'));
-app.use('/api/analytics', require('./routes/analytics'));
-
-// Manejo de errores
+// Manejo de errores de autenticación
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        error: 'Error interno del servidor',
-        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({
+      success: false,
+      message: 'Token no válido o no proporcionado'
     });
+  }
+  next(err);
 });
 
-module.exports = app; 
+// Manejo general de errores
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Error interno del servidor'
+  });
+});
+
+module.exports = app;
