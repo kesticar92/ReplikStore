@@ -6,8 +6,8 @@ const {
   getLastSensorValue
 } = require('../controllers/sensorController');
 
-router.post('/data', receiveSensorData);
-router.get('/', getAllSensorData);
-router.get('/:sensor', getLastSensorValue);
+router.post('/api/sensores', receiveSensorData);
+router.get('/api/sensores', getAllSensorData);
+router.get('/api/sensores/:sensor', getLastSensorValue);
 
 module.exports = router;
