@@ -1,0 +1,41 @@
+openapi: 3.0.0
+info:
+  title: ReplikStore API
+  version: 1.0.0
+  description: Documentación de la API de ReplikStore
+paths:
+  /api/analytics/top-products:
+    get:
+      summary: Obtener los productos más vendidos
+      tags:
+        - Analítica
+      responses:
+        '200':
+          description: Lista de productos más vendidos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        productId:
+                          type: integer
+                        name:
+                          type: string
+                        count:
+                          type: integer
+              example:
+                success: true
+                data:
+                  - productId: 1
+                    name: "Producto A"
+                    count: 10
+                  - productId: 2
+                    name: "Producto B"
+                    count: 7 

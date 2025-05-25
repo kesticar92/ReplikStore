@@ -1,5 +1,16 @@
 const rateLimit = require('express-rate-limit');
 
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: process.env.NODE_ENV === 'test' ? 1000 : 100, // Más peticiones en modo test
+    message: {
+        success: false,
+        message: 'Demasiadas peticiones, por favor intente más tarde'
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
     max: 100, // límite de 100 peticiones por ventana por IP
@@ -20,5 +31,6 @@ const authLimiter = rateLimit({
 
 module.exports = {
     apiLimiter,
-    authLimiter
+    authLimiter,
+    limiter
 }; 

@@ -1,127 +1,160 @@
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 const User = require('../models/user');
+const bcrypt = require('bcryptjs');
+const authService = require('../services/authService');
+const { logger } = require('../utils/logger');
 
-// Usuarios de prueba (en producción, usar base de datos)
-const users = [
-    {
-        id: 1,
-        email: 'admin@test.com',
-        password: '$2a$10$XOPbrlUPQdwdJUpSrIF6X.LbE14qsMmKGhM1A8W9E7kkodKI8apXC', // password123
-        role: 'admin'
-    }
-];
-
-exports.register = async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                errors: errors.array()
-            });
-        }
-
-        const { email, password, role } = req.body;
-
-        if (users.some(u => u.email === email)) {
-            return res.status(400).json({
-                success: false,
-                message: 'El usuario ya existe'
-            });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = {
-            id: users.length + 1,
-            email,
-            password: hashedPassword,
-            role: role || 'viewer'
-        };
-
-        users.push(newUser);
-
-        const token = jwt.sign(
-            { userId: newUser.id, role: newUser.role },
-            process.env.JWT_SECRET || 'your-secret-key',
-            { expiresIn: '1h' }
-        );
-
-        res.status(201).json({
-            success: true,
-            token,
-            role: newUser.role
-        });
-    } catch (error) {
-        console.error('Error en registro:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error en el servidor'
-        });
-    }
-};
-
-exports.login = async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                errors: errors.array()
-            });
-        }
-
-        const { email, password } = req.body;
-
-        // Para pruebas, si las credenciales son las de prueba, aceptar directamente
-        if (email === 'admin@test.com' && password === 'password123') {
-            const token = jwt.sign(
-                { userId: 1, role: 'admin' },
-                process.env.JWT_SECRET || 'your-secret-key',
-                { expiresIn: '1h' }
-            );
-
-            return res.status(200).json({
+class AuthController {
+    async login(req, res, next) {
+        try {
+            const { email, password } = req.body;
+            const result = await authService.login(email, password);
+            
+            res.json({
                 success: true,
-                token,
-                role: 'admin'
+                message: 'Login exitoso',
+                data: result
             });
-        }
-
-        const user = users.find(u => u.email === email);
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Credenciales inválidas'
+        } catch (error) {
+            logger.error('Error en login:', {
+                error: error.message,
+                email: req.body.email
             });
+            next(error);
         }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(401).json({
-                success: false,
-                message: 'Credenciales inválidas'
-            });
-        }
-
-        const token = jwt.sign(
-            { userId: user.id, role: user.role },
-            process.env.JWT_SECRET || 'your-secret-key',
-            { expiresIn: '1h' }
-        );
-
-        res.status(200).json({
-            success: true,
-            token,
-            role: user.role
-        });
-    } catch (error) {
-        console.error('Error en login:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error en el servidor'
-        });
     }
-}; 
+
+    async register(req, res, next) {
+        try {
+            const userData = req.body;
+            const result = await authService.register(userData);
+            
+            res.status(201).json({
+                success: true,
+                message: 'Usuario registrado exitosamente',
+                data: result
+            });
+        } catch (error) {
+            logger.error('Error en registro:', {
+                error: error.message,
+                email: req.body.email
+            });
+            next(error);
+        }
+    }
+
+    async refreshToken(req, res, next) {
+        try {
+            const { refreshToken } = req.body;
+            const result = await authService.refreshToken(refreshToken);
+            
+            res.json({
+                success: true,
+                message: 'Token actualizado exitosamente',
+                data: result
+            });
+        } catch (error) {
+            logger.error('Error en refresh token:', {
+                error: error.message
+            });
+            next(error);
+        }
+    }
+
+    async logout(req, res, next) {
+        try {
+            const userId = req.user.id;
+            await authService.logout(userId);
+            
+            res.json({
+                success: true,
+                message: 'Logout exitoso'
+            });
+        } catch (error) {
+            logger.error('Error en logout:', {
+                error: error.message,
+                userId: req.user?.id
+            });
+            next(error);
+        }
+    }
+
+    async changePassword(req, res, next) {
+        try {
+            const userId = req.user.id;
+            const { currentPassword, newPassword } = req.body;
+            
+            await authService.changePassword(userId, currentPassword, newPassword);
+            
+            res.json({
+                success: true,
+                message: 'Contraseña actualizada exitosamente'
+            });
+        } catch (error) {
+            logger.error('Error al cambiar contraseña:', {
+                error: error.message,
+                userId: req.user?.id
+            });
+            next(error);
+        }
+    }
+
+    async getProfile(req, res, next) {
+        try {
+            const userId = req.user.id;
+            const user = await User.findById(userId).select('-password -refreshToken');
+            
+            if (!user) {
+                throw new ValidationError('Usuario no encontrado');
+            }
+            
+            res.json({
+                success: true,
+                data: user
+            });
+        } catch (error) {
+            logger.error('Error al obtener perfil:', {
+                error: error.message,
+                userId: req.user?.id
+            });
+            next(error);
+        }
+    }
+
+    async updateProfile(req, res, next) {
+        try {
+            const userId = req.user.id;
+            const updateData = req.body;
+            
+            // No permitir actualizar campos sensibles
+            delete updateData.password;
+            delete updateData.role;
+            delete updateData.status;
+            
+            const user = await User.findByIdAndUpdate(
+                userId,
+                { $set: updateData },
+                { new: true, runValidators: true }
+            ).select('-password -refreshToken');
+            
+            if (!user) {
+                throw new ValidationError('Usuario no encontrado');
+            }
+            
+            res.json({
+                success: true,
+                message: 'Perfil actualizado exitosamente',
+                data: user
+            });
+        } catch (error) {
+            logger.error('Error al actualizar perfil:', {
+                error: error.message,
+                userId: req.user?.id
+            });
+            next(error);
+        }
+    }
+}
+
+module.exports = new AuthController(); 

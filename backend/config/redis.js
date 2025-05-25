@@ -1,21 +1,19 @@
 const Redis = require('ioredis');
+const logger = require('../utils/logger');
 
-const redisClient = new Redis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 6379,
+const redisClient = new Redis(process.env.REDIS_URL, {
     retryStrategy: (times) => {
         const delay = Math.min(times * 50, 2000);
         return delay;
-    },
-    maxRetriesPerRequest: 3
-});
-
-redisClient.on('error', (err) => {
-    console.error('Error en la conexión con Redis:', err);
+    }
 });
 
 redisClient.on('connect', () => {
-    console.log('Conexión exitosa con Redis');
+    logger.info('Redis conectado');
+});
+
+redisClient.on('error', (err) => {
+    logger.error(`Error en Redis: ${err.message}`);
 });
 
 const DEFAULT_EXPIRATION = 3600; // 1 hora

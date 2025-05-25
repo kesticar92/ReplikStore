@@ -1,207 +1,185 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { expressjwt: jwt } = require('express-jwt');
-const WebSocket = require('ws');
-const http = require('http');
+const setupWebSocket = require('./websocket');
+const rateLimit = require('express-rate-limit');
+const connectDB = require('./config/database');
+const { app } = require('./app');
 const morgan = require('morgan');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
+const { logger } = require('./utils/logger');
+const { errorHandler } = require('./middleware/errorHandler');
+const authRoutes = require('./routes/auth');
+const productRoutes = require('./routes/product');
+const inventoryRoutes = require('./routes/inventory');
+const eventRoutes = require('./routes/event');
+const mongoose = require('mongoose');
+const helmet = require('helmet');
+const notificationService = require('./services/notificationService');
+const jwt = require('jsonwebtoken');
+const notificationRoutes = require('./routes/notification');
+const auditRoutes = require('./routes/audit');
+const reportRoutes = require('./routes/report');
 
-const sensorRoutes = require('./routes/sensorRoutes');
-const authRoutes = require('./routes/authRoutes');
+const PORT = process.env.PORT || 4000;
 
-const app = express();
-const port = process.env.PORT || 3000;
-
-// Crear servidor HTTP
-const server = http.createServer(app);
-
-// Crear servidor WebSocket
-const wss = new WebSocket.Server({ server });
-
-// Almacenar el servidor WebSocket en la app para acceso desde los controladores
-app.set('wsServer', wss);
+// Configurar rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 100, // límite de 100 peticiones por ventana
+    message: {
+        success: false,
+        message: 'Demasiadas peticiones, por favor intente más tarde'
+    }
+});
 
 // Middleware
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(limiter);
+app.use(morgan('dev'));
 
-// Configuración JWT
-const jwtSecret = process.env.JWT_SECRET || 'tu_secreto_jwt_super_seguro';
-app.use(
-    jwt({ 
-        secret: jwtSecret, 
-        algorithms: ['HS256'],
-        credentialsRequired: false
-    }).unless({ path: ['/api/auth/test-token'] })
-);
+// Documentación Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: "ReplkStore API Documentation"
+}));
 
 // Rutas
-app.use('/api/sensors', sensorRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
+app.use('/products', productRoutes);
+app.use('/inventory', inventoryRoutes);
+app.use('/events', eventRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/reports', reportRoutes);
 
-// Manejo de errores JWT
-app.use((err, req, res, next) => {
-    if (err.name === 'UnauthorizedError') {
-        res.status(401).json({
-            success: false,
-            message: 'Token inválido o no proporcionado'
-        });
-    } else {
-        next(err);
-    }
-});
+// Manejo de errores
+app.use(errorHandler);
 
-// Middleware de logging
-if (process.env.NODE_ENV === 'development') {
-    app.use(morgan('dev'));
-}
+let server = null;
 
-// Manejo de errores no capturados
-process.on('uncaughtException', (err) => {
-    console.error('UNCAUGHT EXCEPTION! 💥 Cerrando...');
-    console.error(err.name, err.message);
-    process.exit(1);
-});
-
-process.on('unhandledRejection', (err) => {
-    console.error('UNHANDLED REJECTION! 💥 Cerrando...');
-    console.error(err.name, err.message);
-    server.close(() => {
-        process.exit(1);
-    });
-});
-
-// Configuración de WebSocket
-const HEARTBEAT_INTERVAL = 30000;
-const CLIENT_TIMEOUT = 45000;
-
-// Manejar conexiones WebSocket
-wss.on('connection', (ws) => {
-    console.log('Nueva conexión WebSocket establecida');
-    ws.isAlive = true;
-
-    // Enviar mensaje de bienvenida inmediatamente
+const startServer = async () => {
     try {
-        const welcomeMessage = {
-            type: 'welcome',
-            message: 'Bienvenido a la conexión WebSocket del Digital Twin',
-            timestamp: new Date().toISOString()
-        };
-        ws.send(JSON.stringify(welcomeMessage));
-        console.log('Mensaje de bienvenida enviado');
-
-        // Enviar mensaje de prueba tipo security_event
-        const testSecurityEvent = {
-            type: 'security_event',
-            message: '¡Conexión exitosa! Evento de seguridad de prueba.',
-            timestamp: new Date().toISOString()
-        };
-        ws.send(JSON.stringify(testSecurityEvent));
-        console.log('Mensaje de prueba security_event enviado');
-    } catch (error) {
-        console.error('Error al enviar mensaje de bienvenida:', error);
-    }
-
-    // Manejar pings del cliente
-    ws.on('pong', () => {
-        ws.isAlive = true;
-    });
-
-    // Verificar estado de la conexión periódicamente
-    const pingInterval = setInterval(() => {
-        if (ws.isAlive === false) {
-            console.log('Cliente no responde, cerrando conexión');
-            return ws.terminate();
-        }
-        
-        ws.isAlive = false;
-        ws.ping(() => {});
-    }, HEARTBEAT_INTERVAL);
-
-    ws.on('message', (message) => {
-        try {
-            const data = JSON.parse(message);
-            console.log('Mensaje WebSocket recibido:', data);
-            
-            // Procesar mensaje según su tipo
-            switch(data.type) {
-                case 'sensor_update':
-                    console.log('Procesando actualización de sensor:', data);
-                    // Broadcast a todos los clientes
+        await connectDB();
+        return new Promise((resolve) => {
+            server = app.listen(PORT, () => {
+                console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
+                const wss = setupWebSocket(server);
+                // Definir función global para emitir mensajes WebSocket
+                global.broadcastUpdate = (type, data) => {
+                    console.log('Iniciando broadcast de actualización...');
+                    console.log('Tipo de mensaje:', type);
+                    console.log('Datos a enviar:', data);
+                    console.log('Número de clientes conectados:', wss.clients.size);
+                    
+                    const message = JSON.stringify({ type, data });
+                    let clientsCount = 0;
+                    
                     wss.clients.forEach(client => {
                         if (client.readyState === WebSocket.OPEN) {
-                            try {
-                                client.send(JSON.stringify({
-                                    ...data,
-                                    timestamp: new Date().toISOString()
-                                }));
-                                console.log('Mensaje de actualización reenviado');
-                            } catch (error) {
-                                console.error('Error al reenviar mensaje:', error);
-                            }
+                            console.log('Enviando mensaje a cliente en estado OPEN');
+                            client.send(message);
+                            clientsCount++;
+                        } else {
+                            console.log('Cliente en estado:', client.readyState);
                         }
                     });
-                    break;
-                default:
-                    console.log('Tipo de mensaje no soportado:', data.type);
-                    ws.send(JSON.stringify({
-                        type: 'error',
-                        message: 'Tipo de mensaje no soportado',
-                        timestamp: new Date().toISOString()
-                    }));
-            }
-        } catch (error) {
-            console.error('Error al procesar mensaje WebSocket:', error);
-            ws.send(JSON.stringify({
-                type: 'error',
-                message: 'Formato de mensaje inválido',
-                timestamp: new Date().toISOString()
-            }));
-        }
-    });
-
-    ws.on('close', () => {
-        console.log('Conexión WebSocket cerrada');
-        clearInterval(pingInterval);
-    });
-
-    ws.on('error', (error) => {
-        console.error('Error en conexión WebSocket:', error);
-        clearInterval(pingInterval);
-    });
-});
-
-// Limpiar conexiones muertas periódicamente
-const interval = setInterval(() => {
-    wss.clients.forEach((ws) => {
-        if (ws.isAlive === false) {
-            return ws.terminate();
-        }
-        ws.isAlive = false;
-        ws.ping(() => {});
-    });
-}, CLIENT_TIMEOUT);
-
-wss.on('close', () => {
-    clearInterval(interval);
-});
-
-// Función para enviar actualizaciones a clientes
-const broadcastUpdate = function(type, data) {
-    wss.clients.forEach(function each(client) {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type, data }));
-        }
-    });
+                    
+                    console.log(`Mensaje enviado a ${clientsCount} clientes`);
+                };
+                process.on('SIGTERM', () => {
+                    console.log('SIGTERM recibido. Cerrando servidor...');
+                    server.close(() => {
+                        console.log('Servidor cerrado');
+                        process.exit(0);
+                    });
+                });
+                logger.info(`Documentación API disponible en http://localhost:${PORT}/api-docs`);
+                resolve(server);
+            });
+        });
+    } catch (error) {
+        console.error('Error al iniciar el servidor:', error);
+        process.exit(1);
+    }
 };
 
-global.broadcastUpdate = broadcastUpdate;
-
-// Solo iniciar el servidor si no estamos en modo de prueba
-if (process.env.NODE_ENV !== 'test') {
-    server.listen(port, () => {
-        console.log(`🚀 Servidor corriendo en el puerto ${port}`);
-    });
+if (require.main === module) {
+    // Solo iniciar el servidor automáticamente si es el entrypoint principal
+    startServer();
 }
 
-module.exports = server;
+// Configurar WebSocket para notificaciones
+const WebSocket = require('ws');
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (ws, req) => {
+    // Extraer token de autenticación del header
+    const token = req.headers['sec-websocket-protocol'];
+    if (!token) {
+        ws.close();
+        return;
+    }
+
+    try {
+        // Verificar token y obtener usuario
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.id;
+
+        // Registrar conexión del cliente
+        notificationService.handleClientConnection(ws, userId);
+
+        // Manejar desconexión
+        ws.on('close', () => {
+            notificationService.handleClientDisconnection(ws);
+        });
+    } catch (error) {
+        logger.error('Error en conexión WebSocket:', error);
+        ws.close();
+    }
+});
+
+// Manejar señales de terminación
+process.on('SIGTERM', () => {
+    logger.info('SIGTERM recibido. Cerrando servidor...');
+    server.close(() => {
+        logger.info('Servidor cerrado');
+        mongoose.connection.close(false, () => {
+            logger.info('Conexión a MongoDB cerrada');
+            process.exit(0);
+        });
+    });
+});
+
+// Middleware de auditoría para todas las rutas
+app.use((req, res, next) => {
+    const originalSend = res.send;
+    res.send = function(data) {
+        // Registrar la respuesta después de que se envíe
+        res.on('finish', () => {
+            const auditService = require('./services/auditService');
+            auditService.logEvent({
+                action: req.method.toLowerCase(),
+                entity: req.path.split('/')[2] || 'system',
+                entityId: req.params.id || new mongoose.Types.ObjectId(),
+                user: req.user ? req.user._id : null,
+                ip: req.ip,
+                userAgent: req.get('user-agent'),
+                status: res.statusCode < 400 ? 'success' : 'failure',
+                message: res.statusMessage,
+                metadata: {
+                    path: req.path,
+                    method: req.method,
+                    statusCode: res.statusCode
+                }
+            }).catch(err => logger.error('Error al registrar auditoría:', err));
+        });
+        return originalSend.apply(res, arguments);
+    };
+    next();
+});
+
+module.exports = { app, startServer };

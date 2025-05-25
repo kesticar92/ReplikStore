@@ -62,10 +62,10 @@ Esto permitirá que toda la UI reaccione en tiempo real a los eventos del backen
 
 ### 2. Regenera los archivos de proyecto Xcode
 
-Abre la terminal y ejecuta este comando desde la raíz de tu proyecto (donde está `MyProject2.uproject`):
+Abre la terminal y ejecuta este comando desde la raíz de tu proyecto (donde está `ReplikStore.uproject`):
 
-```sh
-/Applications/Unreal\ Engine/Engine/Build/BatchFiles/Mac/GenerateProjectFiles.sh -project="$PWD/MyProject2.uproject"
+```bash
+/Applications/Unreal\ Engine/Engine/Build/BatchFiles/Mac/GenerateProjectFiles.sh -project="$PWD/ReplikStore.uproject"
 ```
 
 - Si tienes Unreal Engine instalado en otra ruta, ajusta la ruta del script.
@@ -73,12 +73,12 @@ Abre la terminal y ejecuta este comando desde la raíz de tu proyecto (donde est
 
 ### 3. Abre el nuevo archivo de proyecto en Xcode
 
-- Abre el archivo `MyProject2.xcworkspace` (o `MyProject2.xcodeproj` si no tienes workspace).
+- Abre el archivo `ReplikStore.xcworkspace` (o `ReplikStore.xcodeproj` si no tienes workspace).
 - Ahora los targets deberían aparecer en negro (no en rojo).
 
 ### 4. Haz Build en Xcode
 
-- Selecciona el target **MyProject2Editor (Mac)**.
+- Selecciona el target **ReplikStoreEditor (Mac)**.
 - Haz clic en "Build" (Cmd+B).
 
 ### 5. Abre Unreal Engine

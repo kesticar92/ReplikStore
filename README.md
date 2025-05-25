@@ -1,18 +1,27 @@
-# Gemelo Digital - Tienda Física
+# ReplikStore - Sistema de Gestión de Inventario y Almacén
 
-Este proyecto implementa un gemelo digital de una tienda física utilizando Unreal Engine 5, con integración de sensores IoT simulados y visualización en tiempo real.
+Este proyecto implementa un sistema completo de gestión de inventario y almacén utilizando NestJS, MongoDB, Redis y Unreal Engine 5, con integración de sensores IoT y visualización en tiempo real.
 
 ## Requisitos
 
 - Unreal Engine 5.1 o superior
 - Node.js 14.0 o superior
 - Python 3.7 o superior
+- MongoDB
+- Redis
 - Módulo `unreal` de Python (incluido con Unreal Engine)
 
 ## Estructura del Proyecto
 
 ```
-MyProject2/
+ReplikStore/
+├── backend/
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── services/
+│   │   ├── models/
+│   │   └── dto/
+├── frontend/
 ├── Content/
 │   └── Blueprints/
 │       ├── Core/

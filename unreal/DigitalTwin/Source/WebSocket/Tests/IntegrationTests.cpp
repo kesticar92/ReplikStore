@@ -20,7 +20,7 @@ bool FDigitalTwinIntegrationTest::RunTest(const FString& Parameters)
     TestNotNull("Visualization Component should be created", VisualizationComp);
 
     // 2. Configurar conexión WebSocket
-    WebSocketComp->URL = TEXT("ws://localhost:3000/ws");
+    WebSocketComp->URL = TEXT("ws://localhost:3001/ws");
     WebSocketComp->Connect("test-token");
 
     // 3. Configurar visualizaciones de sensores

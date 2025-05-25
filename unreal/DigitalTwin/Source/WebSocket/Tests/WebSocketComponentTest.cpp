@@ -19,7 +19,7 @@ bool FWebSocketComponentTest::RunTest(const FString& Parameters)
 
     // Probar autenticación
     const FString TestToken = "test-token";
-    WebSocketComp->Connect("ws://localhost:3000/ws", TestToken);
+    WebSocketComp->Connect("ws://localhost:3001/ws", TestToken);
 
     // Probar envío de mensaje
     const FString TestMessage = "{\"type\":\"test\",\"data\":\"test-data\"}";
