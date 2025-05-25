@@ -1,0 +1,9 @@
+Begin Object Class=/Script/Engine.MaterialInstanceConstant Name="MI_Temperature"
+   Parent=Material'"/Game/Materials/M_SensorBase"'
+   
+   ParameterValues(0)=(ParameterName="Temperature",ParameterValue=0.0)
+   ParameterValues(1)=(ParameterName="Humidity",ParameterValue=0.0)
+   ParameterValues(2)=(ParameterName="Pressure",ParameterValue=0.0)
+   
+   BasePropertyOverrides=(bOverride_BlendMode=true,BlendMode=BLEND_Translucent)
+End Object 

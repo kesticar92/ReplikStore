@@ -1,0 +1,69 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_InventoryManager"
+   Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+   End Object
+   
+   // Variables
+   Variables(0)=(VarName="AllProducts",VarType="array",ElementType="BP_ProductBase")
+   Variables(1)=(VarName="ProductCategories",VarType="array",ElementType="string")
+   Variables(2)=(VarName="LowStockProducts",VarType="array",ElementType="BP_ProductBase")
+   Variables(3)=(VarName="LastInventoryUpdate",VarType="DateTime")
+   Variables(4)=(VarName="DatabaseConnection",VarType="FDatabaseConnection")
+   Variables(5)=(VarName="UpdateInterval",VarType="float",DefaultValue="5.0")
+   Variables(6)=(VarName="IsUpdating",VarType="bool",DefaultValue="false")
+   
+   // Funciones
+   Functions(0)=(FuncName="InitializeInventory")
+   Functions(1)=(FuncName="UpdateAllProducts")
+   Functions(2)=(FuncName="AddProduct",InputParams=((ParamName="ProductData",ParamType="FProductData")))
+   Functions(3)=(FuncName="RemoveProduct",InputParams=((ParamName="ProductID",ParamType="string")))
+   Functions(4)=(FuncName="UpdateProductStock",InputParams=((ParamName="ProductID",ParamType="string"),(ParamName="NewStock",ParamType="int")))
+   Functions(5)=(FuncName="GetLowStockProducts",OutputParams=((ParamName="Products",ParamType="array")))
+   Functions(6)=(FuncName="SyncWithDatabase")
+   Functions(7)=(FuncName="GenerateInventoryReport")
+   Functions(8)=(FuncName="HandleStockAlert",InputParams=((ParamName="Product",ParamType="BP_ProductBase")))
+   Functions(9)=(FuncName="UpdateProductLocations")
+   
+   // Eventos
+   Events(0)=(EventName="OnInventoryUpdated")
+   Events(1)=(EventName="OnLowStockAlert")
+   Events(2)=(EventName="OnProductAdded")
+   Events(3)=(EventName="OnProductRemoved")
+   Events(4)=(EventName="OnSyncComplete")
+   
+   DefaultSceneRoot=Root
+   
+   // Implementación
+   Begin Implementation
+      Function InitializeInventory
+         ConnectToDatabase
+         LoadProductCategories
+         SyncWithDatabase
+         StartUpdateTimer
+      EndFunction
+      
+      Function UpdateAllProducts
+         SetIsUpdating(true)
+         ForEach Product in AllProducts
+            UpdateProductFromDB
+            UpdateProductVisuals
+         EndForEach
+         CheckLowStockProducts
+         SetIsUpdating(false)
+         OnInventoryUpdated.Broadcast
+      EndFunction
+      
+      Function HandleStockAlert
+         AddToLowStockList
+         NotifyInventorySystem
+         UpdateProductVisuals
+         OnLowStockAlert.Broadcast
+      EndFunction
+      
+      Function UpdateProductLocations
+         ForEach Product in AllProducts
+            UpdateProductTransform
+            UpdateShelfReference
+         EndForEach
+      EndFunction
+   End Implementation
+End Object 

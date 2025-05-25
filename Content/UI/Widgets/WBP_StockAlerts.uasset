@@ -1,0 +1,91 @@
+Begin Object Class=/Script/UMG.WidgetBlueprint Name="WBP_StockAlerts"
+   Begin Object Class=/Script/UMG.CanvasPanel Name="RootCanvas"
+   End Object
+   
+   Begin Object Class=/Script/UMG.Border Name="MainBorder"
+      BorderBrush=(R=0.122,G=0.306,B=0.475,A=1.000) // #1F4E79
+      Background=(R=0.95,G=0.95,B=0.95,A=1.000)
+   End Object
+   
+   Begin Object Class=/Script/UMG.VerticalBox Name="AlertsContainer"
+   End Object
+   
+   // Panel Superior
+   Begin Object Class=/Script/UMG.HorizontalBox Name="HeaderBar"
+      Begin Object Class=/Script/UMG.TextBlock Name="Title"
+         Text="Alertas de Stock"
+         ColorAndOpacity=(R=0.122,G=0.306,B=0.475,A=1.000)
+      End Object
+      Begin Object Class=/Script/UMG.Button Name="RefreshButton"
+         ToolTipText="Actualizar Alertas"
+      End Object
+   End Object
+   
+   // Panel de Filtros
+   Begin Object Class=/Script/UMG.HorizontalBox Name="FiltersBar"
+      Begin Object Class=/Script/UMG.ComboBox Name="CategoryFilter"
+         ToolTipText="Filtrar por Categoría"
+      End Object
+      Begin Object Class=/Script/UMG.ComboBox Name="UrgencyFilter"
+         Options=["Todas", "Críticas", "Advertencias"]
+      End Object
+   End Object
+   
+   // Lista de Alertas
+   Begin Object Class=/Script/UMG.ScrollBox Name="AlertsList"
+   End Object
+   
+   // Panel de Estadísticas
+   Begin Object Class=/Script/UMG.VerticalBox Name="StatsPanel"
+      Begin Object Class=/Script/UMG.TextBlock Name="TotalAlerts"
+         Text="Total de Alertas: 0"
+      End Object
+      Begin Object Class=/Script/UMG.TextBlock Name="CriticalAlerts"
+         Text="Alertas Críticas: 0"
+         ColorAndOpacity=(R=0.8,G=0.2,B=0.2,A=1.000)
+      End Object
+   End Object
+   
+   // Variables
+   Variables(0)=(VarName="ActiveAlerts",VarType="array",ElementType="FStockAlert")
+   Variables(1)=(VarName="FilteredAlerts",VarType="array",ElementType="FStockAlert")
+   Variables(2)=(VarName="SelectedCategory",VarType="string")
+   Variables(3)=(VarName="SelectedUrgency",VarType="EAlertUrgency")
+   
+   // Funciones
+   Functions(0)=(FuncName="RefreshAlerts")
+   Functions(1)=(FuncName="FilterAlerts")
+   Functions(2)=(FuncName="AddAlert",InputParams=((ParamName="Alert",ParamType="FStockAlert")))
+   Functions(3)=(FuncName="RemoveAlert",InputParams=((ParamName="AlertID",ParamType="string")))
+   Functions(4)=(FuncName="UpdateStatistics")
+   Functions(5)=(FuncName="HandleAlertAction",InputParams=((ParamName="AlertID",ParamType="string"),(ParamName="Action",ParamType="EAlertAction")))
+   
+   // Implementación
+   Begin Implementation
+      Function RefreshAlerts
+         ClearCurrentAlerts
+         LoadActiveAlerts
+         FilterAlerts
+         UpdateStatistics
+         UpdateVisuals
+      EndFunction
+      
+      Function FilterAlerts
+         ClearFilteredList
+         ForEach Alert in ActiveAlerts
+            If MatchesFilters(Alert)
+               AddToFilteredList(Alert)
+            EndIf
+         EndForEach
+         UpdateAlertsList
+      EndFunction
+      
+      Function UpdateStatistics
+         CountTotalAlerts
+         CountCriticalAlerts
+         UpdateStatsPanel
+      EndFunction
+   End Implementation
+   
+   WidgetTree=RootCanvas
+End Object 

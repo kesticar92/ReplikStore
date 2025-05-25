@@ -1,0 +1,57 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_SensorVisualizer"
+   Begin Object Class=/Script/Engine.ComponentList Name="Components"
+      Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+      End Object
+
+      Begin Object Class=/Script/WebSocket.WebSocketComponent Name="WebSocket"
+         URL="ws://localhost:3000/ws"
+         bAutoConnect=true
+      End Object
+
+      Begin Object Class=/Script/WebSocket.SensorManagerComponent Name="SensorManager"
+      End Object
+
+      Begin Object Class=/Script/WebSocket.VisualizationComponent Name="Visualization"
+      End Object
+   End Object
+
+   Begin Object Class=/Script/Engine.EventGraph Name="EventGraph"
+      Begin Object Class=/Script/Engine.EdGraphNode_Event Name="Event_BeginPlay"
+         EventReference=(MemberName="ReceiveBeginPlay")
+      End Object
+
+      Begin Object Class=/Script/Engine.EdGraphNode_CallFunction Name="GetAuthToken"
+         FunctionReference=(MemberName="RequestAuthToken")
+      End Object
+
+      Begin Object Class=/Script/Engine.EdGraphNode_CallFunction Name="ConnectWebSocket"
+         FunctionReference=(MemberName="Connect")
+      End Object
+
+      Begin Object Class=/Script/Engine.EdGraphNode_CallFunction Name="InitializeSensors"
+         FunctionReference=(MemberName="SetupSensorVisualizations")
+      End Object
+   End Object
+
+   Begin Object Class=/Script/Engine.Function Name="SetupSensorVisualizations"
+      Begin Object Class=/Script/Engine.EdGraphNode_CallFunction Name="CreateTempSensor"
+         FunctionReference=(MemberName="AddSensorVisualization")
+         Parameters=(SensorId="temp_001",Type="temperatura",Location=(X=0,Y=0,Z=100))
+      End Object
+
+      Begin Object Class=/Script/Engine.EdGraphNode_CallFunction Name="CreateHumiditySensor"
+         FunctionReference=(MemberName="AddSensorVisualization")
+         Parameters=(SensorId="hum_001",Type="humedad",Location=(X=100,Y=0,Z=100))
+      End Object
+
+      Begin Object Class=/Script/Engine.EdGraphNode_CallFunction Name="CreatePressureSensor"
+         FunctionReference=(MemberName="AddSensorVisualization")
+         Parameters=(SensorId="pres_001",Type="presion",Location=(X=200,Y=0,Z=100))
+      End Object
+   End Object
+
+   DefaultSceneRoot=Root
+   WebSocketComponent=WebSocket
+   SensorManagerComponent=SensorManager
+   VisualizationComponent=Visualization
+End Object 

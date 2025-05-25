@@ -1,0 +1,68 @@
+Begin Object Class=/Script/Engine.Blueprint Name="BP_SecurityCamera"
+   Begin Object Class=/Script/Engine.SceneComponent Name="Root"
+   End Object
+   Begin Object Class=/Script/Engine.StaticMeshComponent Name="CameraBody"
+      StaticMesh=/Engine/BasicShapes/Cylinder
+   End Object
+   Begin Object Class=/Script/Engine.CameraComponent Name="CameraView"
+      FieldOfView=90.0
+   End Object
+   Begin Object Class=/Script/Engine.RotatingMovementComponent Name="CameraRotation"
+      RotationRate=(Yaw=0.0,Pitch=0.0,Roll=0.0)
+   End Object
+   Begin Object Class=/Script/Engine.BoxComponent Name="DetectionZone"
+      BoxExtent=(X=500.0,Y=500.0,Z=300.0)
+   End Object
+   
+   // Variables
+   Variables(0)=(VarName="MaxZoom",VarType="float",DefaultValue="1000.0")
+   Variables(1)=(VarName="MinZoom",VarType="float",DefaultValue="300.0")
+   Variables(2)=(VarName="RotationSpeed",VarType="float",DefaultValue="45.0")
+   Variables(3)=(VarName="IsActive",VarType="bool",DefaultValue="true")
+   Variables(4)=(VarName="IsRecording",VarType="bool",DefaultValue="false")
+   Variables(5)=(VarName="RecordingBuffer",VarType="array",ElementType="TextureRenderTarget2D")
+   Variables(6)=(VarName="MotionThreshold",VarType="float",DefaultValue="0.1")
+   Variables(7)=(VarName="LastFrameData",VarType="TextureRenderTarget2D")
+   Variables(8)=(VarName="AlertLevel",VarType="enum",EnumType="ECameraAlertLevel",DefaultValue="Normal")
+   Variables(9)=(VarName="RecordingPath",VarType="string",DefaultValue="/Game/Recordings/")
+   
+   // Funciones
+   Functions(0)=(FuncName="RotateCamera",InputParams=((ParamName="Direction",ParamType="float")))
+   Functions(1)=(FuncName="ZoomCamera",InputParams=((ParamName="ZoomFactor",ParamType="float")))
+   Functions(2)=(FuncName="ToggleCamera")
+   Functions(3)=(FuncName="StartRecording")
+   Functions(4)=(FuncName="StopRecording")
+   Functions(5)=(FuncName="DetectMotion",OutputParams=((ParamName="MotionDetected",ParamType="bool"),(ParamName="MotionLocation",ParamType="Vector")))
+   Functions(6)=(FuncName="SaveRecording",InputParams=((ParamName="Filename",ParamType="string")))
+   Functions(7)=(FuncName="ProcessFrame")
+   Functions(8)=(FuncName="TriggerAlert",InputParams=((ParamName="AlertType",ParamType="ECameraAlertLevel"),(ParamName="AlertMessage",ParamType="string")))
+   
+   // Eventos
+   Events(0)=(EventName="OnMotionDetected")
+   Events(1)=(EventName="OnAlertTriggered")
+   Events(2)=(EventName="OnRecordingStarted")
+   Events(3)=(EventName="OnRecordingStopped")
+   
+   DefaultSceneRoot=Root
+   CameraComponent=CameraView
+   RotatingMovement=CameraRotation
+   
+   // Implementación
+   Begin Implementation
+      Function ProcessFrame
+         CompareWithLastFrame
+         UpdateMotionDetection
+         If IsRecording
+            AddToRecordingBuffer
+         EndIf
+      EndFunction
+      
+      Function DetectMotion
+         AnalyzePixelDifference
+         If MotionAboveThreshold
+            TriggerAlert(Warning, "Movimiento detectado")
+            OnMotionDetected.Broadcast
+         EndIf
+      EndFunction
+   End Implementation
+End Object 

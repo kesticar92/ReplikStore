@@ -1,0 +1,21 @@
+
+# Instrucciones para integrar WebSocket en Unreal Engine 5
+
+1. Instala un plugin de WebSocket para UE5 (recomendado: getnamo/websocket-ue4 o similar).
+2. Crea un Blueprint Actor llamado BP_WebSocketManager.
+3. Usa la estructura del archivo BP_WebSocketManager_structure.json como guía para los nodos:
+   - Conecta al WebSocket en BeginPlay.
+   - Usa el nodo OnMessage para procesar los mensajes entrantes.
+   - Haz un Switch sobre message.type y dispara eventos personalizados para cada tipo.
+4. Crea widgets que se suscriban a estos eventos para mostrar cámaras, inventario, clientes y layout.
+5. Puedes extender la lógica para enviar comandos al backend usando el nodo SendMessage.
+
+Incluye los Custom Events:
+- OnSecurityEvent
+- OnInventoryEvent
+- OnCustomerEvent
+- OnLayoutEvent
+- OnLayoutWarning
+- OnStatusUpdate
+
+Esto permitirá que toda la UI reaccione en tiempo real a los eventos del backend.

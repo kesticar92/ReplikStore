@@ -1,0 +1,37 @@
+config:
+  target: "ws://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 50
+      name: "Incremento gradual de conexiones WebSocket"
+    - duration: 300
+      arrivalRate: 50
+      name: "Carga sostenida"
+  ws:
+    # Tiempo máximo de espera para conexión WebSocket
+    timeout: 10000
+
+scenarios:
+  - name: "Prueba de carga WebSocket"
+    engine: "ws"
+    flow:
+      - connect: "/ws"
+        # Esperar mensaje de bienvenida
+        response:
+          - type: "welcome"
+      # Simular envío de datos de sensor
+      - think: 2
+      - send:
+          type: "sensor_update"
+          data:
+            sensor: "test_sensor_{{ $randomNumber(1,100) }}"
+            tipo: "temperatura"
+            valor: "{{ $randomNumber(20,30) }}"
+            ubicacion: "zona_test"
+      # Esperar respuesta
+      - think: 1
+      # Mantener conexión abierta
+      - loop:
+          - think: 5
+        count: 10 

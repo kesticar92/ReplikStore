@@ -1,0 +1,41 @@
+Begin Object Class=/Script/Engine.Material Name="M_SensorBase"
+   Begin Object Class=/Script/Engine.MaterialExpressionScalarParameter Name="Temperature"
+      ParameterName="Temperature"
+      DefaultValue=0.0
+   End Object
+
+   Begin Object Class=/Script/Engine.MaterialExpressionScalarParameter Name="Humidity"
+      ParameterName="Humidity"
+      DefaultValue=0.0
+   End Object
+
+   Begin Object Class=/Script/Engine.MaterialExpressionScalarParameter Name="Pressure"
+      ParameterName="Pressure"
+      DefaultValue=0.0
+   End Object
+
+   Begin Object Class=/Script/Engine.MaterialExpressionLinearInterpolate Name="TempColorLerp"
+      A=(R=0,G=0,B=1,A=1)  // Color frío (azul)
+      B=(R=1,G=0,B=0,A=1)  // Color caliente (rojo)
+   End Object
+
+   Begin Object Class=/Script/Engine.MaterialExpressionLinearInterpolate Name="HumidityOpacity"
+      A=(R=1,G=1,B=1,A=0.2)  // Baja humedad
+      B=(R=1,G=1,B=1,A=1.0)  // Alta humedad
+   End Object
+
+   Begin Object Class=/Script/Engine.MaterialExpressionLinearInterpolate Name="PressureScale"
+      A=(Scale=0.8)  // Baja presión
+      B=(Scale=1.2)  // Alta presión
+   End Object
+
+   Properties
+      Expressions(0)=Temperature
+      Expressions(1)=Humidity
+      Expressions(2)=Pressure
+      Expressions(3)=TempColorLerp
+      Expressions(4)=HumidityOpacity
+      Expressions(5)=PressureScale
+      BlendMode=BLEND_Translucent
+      bUsedWithStaticLighting=True
+   End Object 

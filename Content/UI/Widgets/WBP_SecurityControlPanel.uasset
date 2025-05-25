@@ -1,0 +1,86 @@
+Begin Object Class=/Script/UMG.WidgetBlueprint Name="WBP_SecurityControlPanel"
+   Begin Object Class=/Script/UMG.CanvasPanel Name="RootCanvas"
+   End Object
+   
+   Begin Object Class=/Script/UMG.Border Name="MainBorder"
+      BorderBrush=(R=0.122,G=0.306,B=0.475,A=1.000) // #1F4E79
+      Background=(R=0.95,G=0.95,B=0.95,A=1.000)
+   End Object
+   
+   Begin Object Class=/Script/UMG.VerticalBox Name="MainContainer"
+   End Object
+   
+   // Panel Superior - Estado General
+   Begin Object Class=/Script/UMG.HorizontalBox Name="StatusBar"
+      Begin Object Class=/Script/UMG.TextBlock Name="SystemStatus"
+         Text="Estado del Sistema: Activo"
+         ColorAndOpacity=(R=0.157,G=0.655,B=0.271,A=1.000) // Verde para activo
+      End Object
+      Begin Object Class=/Script/UMG.TextBlock Name="RecordingStatus"
+         Text="Grabación: Inactiva"
+      End Object
+      Begin Object Class=/Script/UMG.TextBlock Name="AlertStatus"
+         Text="Alertas: 0"
+      End Object
+   End Object
+   
+   // Panel Central - Vista de Cámaras
+   Begin Object Class=/Script/UMG.GridPanel Name="CameraGrid"
+      ColumnCount=2
+      RowCount=2
+   End Object
+   
+   // Panel Lateral - Controles
+   Begin Object Class=/Script/UMG.VerticalBox Name="ControlPanel"
+      Begin Object Class=/Script/UMG.ExpandableArea Name="RecordingControls"
+         HeaderContent=(Text="Control de Grabación")
+         Begin Object Class=/Script/UMG.Button Name="StartRecordingBtn"
+            Content=(Text="Iniciar Grabación")
+         End Object
+         Begin Object Class=/Script/UMG.Button Name="StopRecordingBtn"
+            Content=(Text="Detener Grabación")
+         End Object
+      End Object
+      
+      Begin Object Class=/Script/UMG.ExpandableArea Name="MotionDetection"
+         HeaderContent=(Text="Detección de Movimiento")
+         Begin Object Class=/Script/UMG.Slider Name="SensitivitySlider"
+            ToolTipText="Ajustar Sensibilidad"
+         End Object
+         Begin Object Class=/Script/UMG.CheckBox Name="EnableMotionDetection"
+            Content=(Text="Activar Detección")
+         End Object
+      End Object
+      
+      Begin Object Class=/Script/UMG.ExpandableArea Name="AlertSettings"
+         HeaderContent=(Text="Configuración de Alertas")
+         Begin Object Class=/Script/UMG.ComboBox Name="AlertLevel"
+            Options=["Bajo", "Medio", "Alto"]
+         End Object
+         Begin Object Class=/Script/UMG.CheckBox Name="EnableNotifications"
+            Content=(Text="Notificaciones")
+         End Object
+      End Object
+   End Object
+   
+   // Panel Inferior - Registro de Eventos
+   Begin Object Class=/Script/UMG.ScrollBox Name="EventLog"
+      Begin Object Class=/Script/UMG.TextBlock Name="LogText"
+         Text="Registro de Eventos"
+      End Object
+   End Object
+   
+   // Variables
+   Variables(0)=(VarName="ActiveCameras",VarType="array",ElementType="BP_SecurityCamera")
+   Variables(1)=(VarName="RecordingCameras",VarType="array",ElementType="BP_SecurityCamera")
+   Variables(2)=(VarName="AlertHistory",VarType="array",ElementType="FAlertData")
+   
+   // Funciones
+   Functions(0)=(FuncName="UpdateSystemStatus")
+   Functions(1)=(FuncName="ToggleRecording",InputParams=((ParamName="CameraIndex",ParamType="int")))
+   Functions(2)=(FuncName="HandleAlert",InputParams=((ParamName="AlertData",ParamType="FAlertData")))
+   Functions(3)=(FuncName="UpdateEventLog",InputParams=((ParamName="EventMessage",ParamType="string")))
+   Functions(4)=(FuncName="ExportRecording",InputParams=((ParamName="CameraIndex",ParamType="int"),(ParamName="StartTime",ParamType="DateTime"),(ParamName="EndTime",ParamType="DateTime")))
+   
+   WidgetTree=RootCanvas
+End Object 

@@ -1,0 +1,72 @@
+{
+    "BlueprintName": "BP_WebSocketManager",
+    "Description": "Actor que gestiona la conexión WebSocket y emite eventos para seguridad, inventario, clientes y layout.",
+    "Nodes": [
+        {
+            "Type": "EventBeginPlay",
+            "Description": "Conectar al WebSocket al iniciar el juego."
+        },
+        {
+            "Type": "WebSocketConnect",
+            "URL": "ws://localhost:3001",
+            "Description": "Conexión al backend."
+        },
+        {
+            "Type": "WebSocketOnMessage",
+            "Description": "Procesar mensajes entrantes y emitir eventos UE5."
+        },
+        {
+            "Type": "SwitchOnString",
+            "Variable": "message.type",
+            "Cases": [
+                "security_event",
+                "inventory_event",
+                "customer_event",
+                "layout_event",
+                "layout_warning",
+                "status_update"
+            ]
+        },
+        {
+            "Type": "CustomEvent",
+            "Name": "OnSecurityEvent",
+            "Description": "Evento para widgets de seguridad."
+        },
+        {
+            "Type": "CustomEvent",
+            "Name": "OnInventoryEvent",
+            "Description": "Evento para widgets de inventario."
+        },
+        {
+            "Type": "CustomEvent",
+            "Name": "OnCustomerEvent",
+            "Description": "Evento para widgets de clientes."
+        },
+        {
+            "Type": "CustomEvent",
+            "Name": "OnLayoutEvent",
+            "Description": "Evento para widgets de layout."
+        },
+        {
+            "Type": "CustomEvent",
+            "Name": "OnLayoutWarning",
+            "Description": "Evento para advertencias de layout."
+        },
+        {
+            "Type": "CustomEvent",
+            "Name": "OnStatusUpdate",
+            "Description": "Evento para actualización general de estado."
+        }
+    ],
+    "Variables": [
+        {
+            "Name": "WebSocket",
+            "Type": "Object",
+            "Class": "WebSocket"
+        },
+        {
+            "Name": "LastMessage",
+            "Type": "String"
+        }
+    ]
+}
