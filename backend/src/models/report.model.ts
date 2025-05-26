@@ -1,29 +1,38 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-
-export type ReportType = 'inventory' | 'sales' | 'performance' | 'custom';
-export type ReportFormat = 'pdf' | 'excel' | 'csv' | 'json';
-export type ReportStatus = 'pending' | 'processing' | 'completed' | 'failed';
+import { ReportType, ReportFormat, ReportStatus } from '../dto/report.dto';
 
 @Schema({ timestamps: true })
 export class Report extends Document {
-  @Prop({ required: true })
+  @Prop({ required: true, enum: ReportType })
   type: ReportType;
+
+  @Prop({ required: true, enum: ReportFormat })
+  format: ReportFormat;
+
+  @Prop({ required: true, enum: ReportStatus, default: ReportStatus.PENDING })
+  status: ReportStatus;
+
+  @Prop({ type: Object })
+  parameters?: Record<string, any>;
+
+  @Prop()
+  filePath?: string;
+
+  @Prop()
+  errorMessage?: string;
+
+  @Prop({ default: false })
+  isScheduled: boolean;
+
+  @Prop()
+  scheduledDate?: Date;
 
   @Prop({ required: true })
   name: string;
 
   @Prop()
   description: string;
-
-  @Prop({ type: Object, required: true })
-  parameters: Record<string, any>;
-
-  @Prop({ required: true })
-  format: ReportFormat;
-
-  @Prop({ default: 'pending' })
-  status: ReportStatus;
 
   @Prop()
   error?: string;
@@ -40,30 +49,23 @@ export class Report extends Document {
   @Prop({ type: Object })
   metadata: Record<string, any>;
 
-  @Prop({ default: false })
-  isScheduled: boolean;
-
-  @Prop()
-  schedule?: {
-    frequency: string;
-    lastRun?: Date;
-    nextRun?: Date;
-  };
+  @Prop({ type: Object })
+  schedule?: any;
 
   markAsProcessing(): void {
-    this.status = 'processing';
+    this.status = ReportStatus.PROCESSING;
   }
 
   markAsCompleted(fileUrl: string, fileSize: number): void {
-    this.status = 'completed';
+    this.status = ReportStatus.COMPLETED;
     this.fileUrl = fileUrl;
     this.fileSize = fileSize;
     this.generatedAt = new Date();
   }
 
-  markAsFailed(error: string): void {
-    this.status = 'failed';
-    this.error = error;
+  markAsFailed(errorMessage: string): void {
+    this.status = ReportStatus.FAILED;
+    this.errorMessage = errorMessage;
   }
 
   updateSchedule(nextRun: Date): void {

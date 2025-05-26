@@ -1,12 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-
-export type NotificationType = 'email' | 'sms' | 'webhook';
-export type NotificationStatus = 'pending' | 'sent' | 'failed';
+import { NotificationType, NotificationStatus } from '../dto/notification.dto';
 
 @Schema({ timestamps: true })
 export class Notification extends Document {
-  @Prop({ required: true })
+  @Prop({ required: true, enum: NotificationType })
   type: NotificationType;
 
   @Prop({ required: true })
@@ -18,11 +16,14 @@ export class Notification extends Document {
   @Prop({ required: true })
   content: string;
 
-  @Prop({ type: Object })
-  metadata: Record<string, any>;
-
-  @Prop({ default: 'pending' })
+  @Prop({ required: true, enum: NotificationStatus, default: NotificationStatus.PENDING })
   status: NotificationStatus;
+
+  @Prop()
+  errorMessage?: string;
+
+  @Prop({ type: Object })
+  metadata?: Record<string, any>;
 
   @Prop()
   error?: string;
@@ -37,16 +38,16 @@ export class Notification extends Document {
   maxRetries: number;
 
   canRetry(): boolean {
-    return this.status === 'failed' && this.retryCount < this.maxRetries;
+    return this.status === NotificationStatus.FAILED && this.retryCount < this.maxRetries;
   }
 
   markAsSent(): void {
-    this.status = 'sent';
+    this.status = NotificationStatus.SENT;
     this.sentAt = new Date();
   }
 
   markAsFailed(error: string): void {
-    this.status = 'failed';
+    this.status = NotificationStatus.FAILED;
     this.error = error;
     this.retryCount += 1;
   }

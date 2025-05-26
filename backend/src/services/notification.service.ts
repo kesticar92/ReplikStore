@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Notification } from '../models/notification.model';
-import { CreateNotificationDto, EmailNotificationDto, SmsNotificationDto, WebhookNotificationDto } from '../dto/notification.dto';
+import { CreateNotificationDto, EmailNotificationDto, SmsNotificationDto, WebhookNotificationDto, UpdateNotificationDto, NotificationFilterDto, NotificationType, NotificationStatus } from '../dto/notification.dto';
 import { LoggerService } from '../core/services/logger.service';
 import { MetricsService } from '../core/services/metrics.service';
 import * as nodemailer from 'nodemailer';
@@ -40,145 +40,170 @@ export class NotificationService {
   }
 
   async create(createNotificationDto: CreateNotificationDto): Promise<Notification> {
-    const notification = new this.notificationModel(createNotificationDto);
-    await notification.save();
-
     try {
-      switch (notification.type) {
-        case 'email':
-          await this.sendEmail(notification as EmailNotificationDto);
-          break;
-        case 'sms':
-          await this.sendSMS(notification as SmsNotificationDto);
-          break;
-        case 'webhook':
-          await this.sendWebhook(notification as WebhookNotificationDto);
-          break;
-      }
-
-      notification.markAsSent();
-      this.metrics.incrementCounter('notification_operations_total', {
-        type: notification.type,
-        status: 'success',
+      const notification = new this.notificationModel({
+        ...createNotificationDto,
+        status: NotificationStatus.PENDING,
       });
+      const saved = await notification.save();
+      this.metrics.increment('notifications.created');
+      return saved;
     } catch (error) {
-      notification.markAsFailed(error.message);
-      this.metrics.incrementCounter('notification_operations_total', {
-        type: notification.type,
-        status: 'error',
-      });
-      this.logger.error(`Error sending notification: ${error.message}`, error);
+      this.logger.error('Error creating notification', error);
+      throw error;
     }
-
-    await notification.save();
-    return notification;
   }
 
-  private async sendEmail(notification: EmailNotificationDto): Promise<void> {
-    const start = Date.now();
+  async findAll(filter: NotificationFilterDto): Promise<Notification[]> {
+    const query: any = {};
+    if (filter.type) query.type = filter.type;
+    if (filter.status) query.status = filter.status;
+    if (filter.recipient) query.recipient = filter.recipient;
+    return this.notificationModel.find(query).exec();
+  }
+
+  async findOne(id: string): Promise<Notification> {
+    try {
+      const notification = await this.notificationModel.findById(id).exec();
+      if (!notification) {
+        throw new NotFoundException(`Notification with ID ${id} not found`);
+      }
+      return notification;
+    } catch (error) {
+      this.logger.error(`Error finding notification ${id}`, error);
+      throw error;
+    }
+  }
+
+  async update(id: string, updateNotificationDto: Partial<CreateNotificationDto>): Promise<Notification> {
+    try {
+      const notification = await this.notificationModel
+        .findByIdAndUpdate(id, updateNotificationDto, { new: true })
+        .exec();
+      if (!notification) {
+        throw new NotFoundException(`Notification with ID ${id} not found`);
+      }
+      this.metrics.increment('notifications.updated');
+      return notification;
+    } catch (error) {
+      this.logger.error(`Error updating notification ${id}`, error);
+      throw error;
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    try {
+      const result = await this.notificationModel.deleteOne({ _id: id }).exec();
+      if (result.deletedCount === 0) {
+        throw new NotFoundException(`Notification with ID ${id} not found`);
+      }
+      this.metrics.increment('notifications.deleted');
+    } catch (error) {
+      this.logger.error(`Error deleting notification ${id}`, error);
+      throw error;
+    }
+  }
+
+  async findFailed(): Promise<Notification[]> {
+    try {
+      return await this.notificationModel.find({ status: NotificationStatus.FAILED }).exec();
+    } catch (error) {
+      this.logger.error('Error finding failed notifications', error);
+      throw error;
+    }
+  }
+
+  async retryFailed(id: string): Promise<Notification> {
+    try {
+      const notification = await this.notificationModel.findById(id).exec();
+      if (!notification) {
+        throw new NotFoundException(`Notification with ID ${id} not found`);
+      }
+
+      if (notification.status !== NotificationStatus.FAILED) {
+        throw new Error('Only failed notifications can be retried');
+      }
+
+      notification.status = NotificationStatus.PENDING;
+      notification.retryCount = (notification.retryCount || 0) + 1;
+
+      const saved = await notification.save();
+      this.metrics.increment('notifications.retried');
+      return saved;
+    } catch (error) {
+      this.logger.error(`Error retrying notification ${id}`, error);
+      throw error;
+    }
+  }
+
+  async sendNotification(notification: Notification): Promise<void> {
+    try {
+      switch (notification.type) {
+        case NotificationType.EMAIL:
+          await this.sendEmail(notification);
+          break;
+        case NotificationType.SMS:
+          await this.sendSMS(notification);
+          break;
+        case NotificationType.WEBHOOK:
+          await this.sendWebhook(notification);
+          break;
+        default:
+          throw new Error(`Unsupported notification type: ${notification.type}`);
+      }
+
+      notification.status = NotificationStatus.SENT;
+      notification.sentAt = new Date();
+      await notification.save();
+      this.metrics.increment('notifications.sent');
+    } catch (error) {
+      notification.status = NotificationStatus.FAILED;
+      notification.errorMessage = error.message;
+      await notification.save();
+      this.metrics.increment('notifications.failed');
+      throw error;
+    }
+  }
+
+  private async sendEmail(notification: Notification): Promise<void> {
     try {
       await this.emailTransporter.sendMail({
         to: notification.recipient,
         subject: notification.subject,
         text: notification.content,
       });
-
-      this.metrics.observeHistogram('notification_operation_duration_seconds',
-        (Date.now() - start) / 1000,
-        { type: 'email' }
-      );
+      this.metrics.increment('notifications.email.sent');
     } catch (error) {
-      throw new Error(`Error sending email: ${error.message}`);
+      this.metrics.increment('notifications.email.failed');
+      throw error;
     }
   }
 
-  private async sendSMS(notification: SmsNotificationDto): Promise<void> {
-    const start = Date.now();
+  private async sendSMS(notification: Notification): Promise<void> {
     try {
       await this.twilioClient.messages.create({
-        body: notification.content,
         to: notification.recipient,
         from: this.configService.get('sms.from'),
+        body: notification.content,
       });
-
-      this.metrics.observeHistogram('notification_operation_duration_seconds',
-        (Date.now() - start) / 1000,
-        { type: 'sms' }
-      );
+      this.metrics.increment('notifications.sms.sent');
     } catch (error) {
-      throw new Error(`Error sending SMS: ${error.message}`);
+      this.metrics.increment('notifications.sms.failed');
+      throw error;
     }
   }
 
-  private async sendWebhook(notification: WebhookNotificationDto): Promise<void> {
-    const start = Date.now();
+  private async sendWebhook(notification: Notification): Promise<void> {
     try {
       await axios.post(notification.recipient, {
         subject: notification.subject,
         content: notification.content,
         metadata: notification.metadata,
       });
-
-      this.metrics.observeHistogram('notification_operation_duration_seconds',
-        (Date.now() - start) / 1000,
-        { type: 'webhook' }
-      );
+      this.metrics.increment('notifications.webhook.sent');
     } catch (error) {
-      throw new Error(`Error sending webhook: ${error.message}`);
+      this.metrics.increment('notifications.webhook.failed');
+      throw error;
     }
-  }
-
-  async findPending(): Promise<Notification[]> {
-    return this.notificationModel.find({ status: 'pending' }).exec();
-  }
-
-  async findFailed(): Promise<Notification[]> {
-    return this.notificationModel.find({
-      status: 'failed',
-      retryCount: { $lt: '$maxRetries' },
-    }).exec();
-  }
-
-  async retryFailed(notification: Notification): Promise<void> {
-    if (!notification.canRetry()) {
-      throw new Error('Notification cannot be retried');
-    }
-
-    try {
-      switch (notification.type) {
-        case 'email':
-          await this.sendEmail(notification as EmailNotificationDto);
-          break;
-        case 'sms':
-          await this.sendSMS(notification as SmsNotificationDto);
-          break;
-        case 'webhook':
-          await this.sendWebhook(notification as WebhookNotificationDto);
-          break;
-      }
-
-      notification.markAsSent();
-      this.metrics.incrementCounter('notification_retry_total', {
-        type: notification.type,
-        status: 'success',
-      });
-    } catch (error) {
-      notification.markAsFailed(error.message);
-      this.metrics.incrementCounter('notification_retry_total', {
-        type: notification.type,
-        status: 'error',
-      });
-      this.logger.error(`Error retrying notification: ${error.message}`, error);
-    }
-
-    await notification.save();
-  }
-
-  async findOne(id: string): Promise<Notification> {
-    const notification = await this.notificationModel.findById(id).exec();
-    if (!notification) {
-      throw new NotFoundException(`Notificación con ID ${id} no encontrada`);
-    }
-    return notification;
   }
 } 

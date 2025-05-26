@@ -1,97 +1,70 @@
-import { IsString, IsEnum, IsOptional, IsObject, IsBoolean, IsDateString, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ReportType, ReportFormat } from '../models/report.model';
+import { IsString, IsEnum, IsOptional, IsObject, IsDate, IsBoolean } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
-class ScheduleDto {
-  @ApiProperty({ description: 'Frecuencia de generación del reporte' })
-  @IsString()
-  frequency: string;
+export enum ReportType {
+  INVENTORY = 'inventory',
+  SALES = 'sales',
+  USERS = 'users',
+  NOTIFICATIONS = 'notifications'
+}
 
-  @ApiPropertyOptional({ description: 'Fecha de la próxima ejecución' })
-  @IsDateString()
-  @IsOptional()
-  nextRun?: string;
+export enum ReportFormat {
+  EXCEL = 'excel',
+  PDF = 'pdf',
+  CSV = 'csv',
+  JSON = 'json'
+}
+
+export enum ReportStatus {
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed'
 }
 
 export class CreateReportDto {
-  @ApiProperty({ description: 'Tipo de reporte', enum: ['inventory', 'sales', 'performance', 'custom'] })
-  @IsEnum(['inventory', 'sales', 'performance', 'custom'])
+  @ApiProperty({ description: 'Tipo de reporte', enum: ReportType })
+  @IsEnum(ReportType)
   type: ReportType;
 
-  @ApiProperty({ description: 'Nombre del reporte' })
-  @IsString()
-  name: string;
-
-  @ApiPropertyOptional({ description: 'Descripción del reporte' })
-  @IsString()
-  @IsOptional()
-  description?: string;
-
-  @ApiProperty({ description: 'Parámetros del reporte' })
-  @IsObject()
-  parameters: Record<string, any>;
-
-  @ApiProperty({ description: 'Formato del reporte', enum: ['pdf', 'excel', 'csv', 'json'] })
-  @IsEnum(['pdf', 'excel', 'csv', 'json'])
+  @ApiProperty({ description: 'Formato del reporte', enum: ReportFormat })
+  @IsEnum(ReportFormat)
   format: ReportFormat;
 
-  @ApiPropertyOptional({ description: 'Metadatos adicionales' })
+  @ApiProperty({ description: 'Parámetros del reporte', required: false })
   @IsObject()
   @IsOptional()
-  metadata?: Record<string, any>;
+  parameters?: Record<string, any>;
 
-  @ApiPropertyOptional({ description: 'Indica si el reporte está programado' })
+  @ApiProperty({ description: 'Programar reporte', required: false })
   @IsBoolean()
   @IsOptional()
   isScheduled?: boolean;
 
-  @ApiPropertyOptional({ description: 'Configuración de programación' })
-  @ValidateNested()
-  @Type(() => ScheduleDto)
+  @ApiProperty({ description: 'Fecha de programación', required: false })
+  @IsDate()
   @IsOptional()
-  schedule?: ScheduleDto;
-}
-
-export class UpdateReportDto {
-  @ApiPropertyOptional({ description: 'Estado del reporte' })
-  @IsString()
-  @IsOptional()
-  status?: string;
-
-  @ApiPropertyOptional({ description: 'Mensaje de error' })
-  @IsString()
-  @IsOptional()
-  error?: string;
-
-  @ApiPropertyOptional({ description: 'URL del archivo generado' })
-  @IsString()
-  @IsOptional()
-  fileUrl?: string;
-
-  @ApiPropertyOptional({ description: 'Tamaño del archivo en bytes' })
-  @IsOptional()
-  fileSize?: number;
+  scheduledDate?: Date;
 }
 
 export class ReportFilterDto {
-  @ApiPropertyOptional({ description: 'Filtrar por tipo de reporte' })
-  @IsEnum(['inventory', 'sales', 'performance', 'custom'])
+  @ApiProperty({ description: 'Filtrar por tipo', enum: ReportType, required: false })
+  @IsEnum(ReportType)
   @IsOptional()
   type?: ReportType;
 
-  @ApiPropertyOptional({ description: 'Filtrar por estado' })
-  @IsString()
+  @ApiProperty({ description: 'Filtrar por estado', enum: ReportStatus, required: false })
+  @IsEnum(ReportStatus)
   @IsOptional()
-  status?: string;
+  status?: ReportStatus;
 
-  @ApiPropertyOptional({ description: 'Filtrar por fecha de inicio' })
-  @IsDateString()
+  @ApiProperty({ description: 'Filtrar por fecha de inicio', required: false })
+  @IsDate()
   @IsOptional()
-  startDate?: string;
+  startDate?: Date;
 
-  @ApiPropertyOptional({ description: 'Filtrar por fecha de fin' })
-  @IsDateString()
+  @ApiProperty({ description: 'Filtrar por fecha de fin', required: false })
+  @IsDate()
   @IsOptional()
-  endDate?: string;
+  endDate?: Date;
 } 

@@ -10,7 +10,7 @@ import { MetricsService } from '../core/services/metrics.service';
 @Injectable()
 export class InventoryService {
   constructor(
-    @InjectModel(Product.name) private productModel: ProductModel,
+    @InjectModel(Product.name) private readonly productModel: ProductModel,
     private readonly logger: LoggerService,
     private readonly cache: CacheService,
     private readonly metrics: MetricsService,
@@ -96,36 +96,25 @@ export class InventoryService {
     }
   }
 
-  async updateStock(sku: string, stockUpdateDto: StockUpdateDto): Promise<Product> {
-    const start = Date.now();
-    try {
-      const product = await this.findOne(sku);
-      
-      if (stockUpdateDto.type === 'remove' && product.currentStock < stockUpdateDto.quantity) {
-        throw new BadRequestException('Insufficient stock');
-      }
-
-      product.updateStock(stockUpdateDto.quantity, stockUpdateDto.type);
-      await product.save();
-
-      // Invalidar caché
-      await this.cache.delete(`products:${sku}`);
-
-      this.metrics.observeHistogram('inventory_operation_duration_seconds',
-        (Date.now() - start) / 1000,
-        { operation: 'updateStock' }
-      );
-
-      return product;
-    } catch (error) {
-      this.logger.error(`Error updating stock for product ${sku}:`, error);
-      throw error;
+  async updateStock(id: string, stockUpdateDto: StockUpdateDto): Promise<Product> {
+    const product = await this.findOne(id);
+    
+    if (stockUpdateDto.operation === 'subtract' && product.currentStock < stockUpdateDto.quantity) {
+      throw new Error('Insufficient stock');
     }
+
+    if (stockUpdateDto.operation === 'add') {
+      product.currentStock += stockUpdateDto.quantity;
+    } else {
+      product.currentStock -= stockUpdateDto.quantity;
+    }
+
+    return product.save();
   }
 
   async findLowStock(): Promise<Product[]> {
     try {
-      return await this.productModel.findLowStock();
+      return await this.productModel.find({ currentStock: { $lte: '$minStock' }, status: 'active' });
     } catch (error) {
       this.logger.error('Error finding low stock products:', error);
       throw error;

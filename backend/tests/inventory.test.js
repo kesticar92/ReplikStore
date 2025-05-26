@@ -19,6 +19,23 @@ Object.keys(require.cache).forEach((key) => {
     }
 });
 
+// Mock para el modelo de producto que acepta new
+class ProductModelMock {
+  constructor(data) {
+    Object.assign(this, data);
+    this.save = sinon.stub().resolves(this);
+  }
+  static find = sinon.stub();
+  static findOne = sinon.stub();
+  static findOneAndUpdate = sinon.stub();
+  static deleteOne = sinon.stub();
+  static create = sinon.stub();
+}
+
+// Reemplazar el modelo real por el mock
+const originalProduct = require('../models/product');
+require('../models/product').__proto__ = ProductModelMock.prototype;
+
 // Mock de cache para evitar conexión real a Redis
 describe('Sistema de Inventario', () => {
     let app;
@@ -69,7 +86,8 @@ describe('Sistema de Inventario', () => {
             process.env.JWT_SECRET || 'test-secret-key'
         );
         
-        testProduct = await Product.create({
+        // Usar el mock en lugar del modelo real
+        testProduct = new ProductModelMock({
             name: 'Test Product',
             sku: 'TEST001',
             currentStock: 100,
@@ -81,6 +99,7 @@ describe('Sistema de Inventario', () => {
             category: 'Test',
             status: 'active'
         });
+        await testProduct.save();
     });
 
     afterEach(async () => {

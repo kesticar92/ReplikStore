@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, Min, IsObject } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Min, IsObject, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateProductDto {
@@ -38,6 +38,16 @@ export class CreateProductDto {
   @Min(0)
   maxStock: number;
 
+  @ApiProperty({ description: 'Precio del producto' })
+  @IsNumber()
+  @Min(0)
+  price: number;
+
+  @ApiProperty({ description: 'Cantidad en stock' })
+  @IsNumber()
+  @Min(0)
+  stock: number;
+
   @ApiPropertyOptional({ description: 'Metadatos adicionales' })
   @IsObject()
   @IsOptional()
@@ -49,6 +59,33 @@ export class UpdateProductDto extends CreateProductDto {
   @IsString()
   @IsOptional()
   status?: string;
+
+  @ApiProperty({ description: 'Nombre del producto', required: false })
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @ApiProperty({ description: 'Descripción del producto', required: false })
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiProperty({ description: 'Precio del producto', required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  price?: number;
+
+  @ApiProperty({ description: 'Cantidad en stock', required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  stock?: number;
+
+  @ApiProperty({ description: 'Categoría del producto', required: false })
+  @IsString()
+  @IsOptional()
+  category?: string;
 }
 
 export class StockUpdateDto {
@@ -57,7 +94,26 @@ export class StockUpdateDto {
   @Min(0)
   quantity: number;
 
-  @ApiProperty({ description: 'Tipo de operación (add/remove)' })
+  @ApiProperty({ description: 'Tipo de operación', enum: ['add', 'subtract'] })
+  @IsEnum(['add', 'subtract'])
+  operation: 'add' | 'subtract';
+}
+
+export class ProductFilterDto {
+  @ApiProperty({ description: 'Filtrar por categoría', required: false })
   @IsString()
-  type: 'add' | 'remove';
+  @IsOptional()
+  category?: string;
+
+  @ApiProperty({ description: 'Filtrar por stock mínimo', required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  minStock?: number;
+
+  @ApiProperty({ description: 'Filtrar por precio máximo', required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  maxPrice?: number;
 } 

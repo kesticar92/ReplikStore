@@ -1,10 +1,21 @@
-import { IsString, IsEnum, IsOptional, IsObject, IsEmail, Matches } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { NotificationType } from '../models/notification.model';
+import { IsString, IsEnum, IsOptional, IsObject, IsEmail, IsUrl } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+
+export enum NotificationType {
+  EMAIL = 'email',
+  SMS = 'sms',
+  WEBHOOK = 'webhook'
+}
+
+export enum NotificationStatus {
+  PENDING = 'pending',
+  SENT = 'sent',
+  FAILED = 'failed'
+}
 
 export class CreateNotificationDto {
-  @ApiProperty({ description: 'Tipo de notificación', enum: ['email', 'sms', 'webhook'] })
-  @IsEnum(['email', 'sms', 'webhook'])
+  @ApiProperty({ description: 'Tipo de notificación', enum: NotificationType })
+  @IsEnum(NotificationType)
   type: NotificationType;
 
   @ApiProperty({ description: 'Destinatario de la notificación' })
@@ -19,45 +30,76 @@ export class CreateNotificationDto {
   @IsString()
   content: string;
 
-  @ApiPropertyOptional({ description: 'Metadatos adicionales' })
+  @ApiProperty({ description: 'Metadatos adicionales', required: false })
   @IsObject()
   @IsOptional()
   metadata?: Record<string, any>;
 }
 
 export class UpdateNotificationDto {
-  @ApiPropertyOptional({ description: 'Estado de la notificación' })
-  @IsString()
+  @ApiProperty({ description: 'Estado de la notificación', enum: NotificationStatus, required: false })
+  @IsEnum(NotificationStatus)
   @IsOptional()
-  status?: string;
+  status?: NotificationStatus;
 
-  @ApiPropertyOptional({ description: 'Mensaje de error' })
+  @ApiProperty({ description: 'Mensaje de error', required: false })
   @IsString()
   @IsOptional()
-  error?: string;
+  errorMessage?: string;
+
+  @ApiProperty({ description: 'Metadatos adicionales', required: false })
+  @IsObject()
+  @IsOptional()
+  metadata?: Record<string, any>;
 }
 
-export class EmailNotificationDto extends CreateNotificationDto {
+export class NotificationFilterDto {
+  @ApiProperty({ description: 'Filtrar por tipo', enum: NotificationType, required: false })
+  @IsEnum(NotificationType)
+  @IsOptional()
+  type?: NotificationType;
+
+  @ApiProperty({ description: 'Filtrar por estado', enum: NotificationStatus, required: false })
+  @IsEnum(NotificationStatus)
+  @IsOptional()
+  status?: NotificationStatus;
+
+  @ApiProperty({ description: 'Filtrar por destinatario', required: false })
+  @IsString()
+  @IsOptional()
+  recipient?: string;
+}
+
+export class EmailNotificationDto {
   @ApiProperty({ description: 'Correo electrónico del destinatario' })
   @IsEmail()
-  recipient: string;
+  to: string;
+
+  @ApiProperty({ description: 'Asunto del correo' })
+  @IsString()
+  subject: string;
+
+  @ApiProperty({ description: 'Contenido del correo' })
+  @IsString()
+  content: string;
 }
 
-export class SmsNotificationDto extends CreateNotificationDto {
+export class SmsNotificationDto {
   @ApiProperty({ description: 'Número de teléfono del destinatario' })
-  @Matches(/^\+[1-9]\d{1,14}$/, {
-    message: 'El número de teléfono debe estar en formato internacional (E.164)',
-  })
-  recipient: string;
+  @IsString()
+  to: string;
+
+  @ApiProperty({ description: 'Contenido del mensaje' })
+  @IsString()
+  content: string;
 }
 
-export class WebhookNotificationDto extends CreateNotificationDto {
+export class WebhookNotificationDto {
   @ApiProperty({ description: 'URL del webhook' })
-  @Matches(
-    /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/,
-    {
-      message: 'La URL del webhook debe ser válida',
-    },
-  )
-  recipient: string;
+  @IsUrl()
+  url: string;
+
+  @ApiProperty({ description: 'Datos a enviar' })
+  @IsObject()
+  data: Record<string, any>;
 } 
