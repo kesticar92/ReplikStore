@@ -1,0 +1,23 @@
+{
+    "FileVersion": 3,
+    "EngineAssociation": "5.3",
+    "Category": "",
+    "Description": "",
+    "Modules": [
+        {
+            "Name": "ReplikStore",
+            "Type": "Runtime",
+            "LoadingPhase": "Default",
+            "AdditionalDependencies": [
+                "Engine",
+                "WebSockets"
+            ]
+        }
+    ],
+    "Plugins": [
+        {
+            "Name": "WebSocketNetworking",
+            "Enabled": true
+        }
+    ]
+} 

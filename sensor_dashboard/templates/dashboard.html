@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReplikStore Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background: #f8f9fa; }
+        .sensor-table th, .sensor-table td { vertical-align: middle; }
+        .alert-icon { font-size: 1.3rem; }
+        .chart-container { height: 350px; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">ReplikStore Dashboard</a>
+        <div class="d-flex">
+            <button class="btn btn-outline-light" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+</nav>
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">Sensores en tiempo real</div>
+                <div class="card-body p-0">
+                    <table class="table table-striped sensor-table mb-0" id="sensorTable">
+                        <thead>
+                            <tr>
+                                <th>Sensor</th>
+                                <th>Valor</th>
+                                <th>Estado</th>
+                                <th>Alerta</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-danger text-white">Alertas activas</div>
+                <div class="card-body" id="alertPanel">
+                    <ul class="list-group" id="alertList"></ul>
+                </div>
+            </div>
+            <button class="btn btn-success w-100" onclick="exportData()">Exportar histórico a CSV</button>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">Histórico de lecturas</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0" id="historyTable">
+                        <thead>
+                            <tr id="historyHeader"></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">Gráfica en tiempo real</div>
+                <div class="card-body chart-container">
+                    <select class="form-select mb-2" id="sensorSelect"></select>
+                    <canvas id="sensorChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    return token;
+}
+function logout() {
+    localStorage.removeItem('token');
+    window.location.href = '/';
+}
+async function fetchWithAuth(url, options = {}) {
+    const token = checkAuth();
+    if (!token) return;
+    const headers = {
+        'Authorization': `Bearer ${token}`,
+        ...options.headers
+    };
+    try {
+        const response = await fetch(url, { ...options, headers });
+        if (response.status === 401) {
+            logout();
+            return;
+        }
+        return response;
+    } catch (error) {
+        console.error('Error:', error);
+        return null;
+    }
+}
+function estadoToBadge(estado) {
+    if (estado === 'normal') return '<span class="badge bg-success">Normal</span>';
+    if (estado === 'bajo') return '<span class="badge bg-warning text-dark">Bajo</span>';
+    if (estado === 'alto') return '<span class="badge bg-danger">Alto</span>';
+    return '<span class="badge bg-secondary">Desconocido</span>';
+}
+function alertaToIcon(estado) {
+    if (estado === 'normal') return '';
+    if (estado === 'bajo' || estado === 'alto') return '<span class="alert-icon text-danger">&#9888;</span>';
+    return '';
+}
+function updateSensorTable(data) {
+    const tbody = document.querySelector('#sensorTable tbody');
+    tbody.innerHTML = '';
+    data.forEach(sensor => {
+        const row = `<tr>
+            <td>${sensor.name}</td>
+            <td>${sensor.value} ${sensor.unit}</td>
+            <td>${estadoToBadge(sensor.status)}</td>
+            <td>${alertaToIcon(sensor.status)}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+    });
+}
+function updateAlerts(data) {
+    const alertList = document.getElementById('alertList');
+    alertList.innerHTML = '';
+    data.forEach(sensor => {
+        if (sensor.status !== 'normal') {
+            const item = `<li class="list-group-item list-group-item-danger">
+                <b>${sensor.name}:</b> Valor ${sensor.status.toUpperCase()} (${sensor.value} ${sensor.unit})
+            </li>`;
+            alertList.innerHTML += item;
+        }
+    });
+    if (alertList.innerHTML === '') {
+        alertList.innerHTML = '<li class="list-group-item">Sin alertas activas</li>';
+    }
+}
+function updateHistoryTable(data) {
+    const header = document.getElementById('historyHeader');
+    const tbody = document.querySelector('#historyTable tbody');
+    tbody.innerHTML = '';
+    if (!data.length) return;
+    header.innerHTML = Object.keys(data[0]).map(k => `<th>${k}</th>`).join('');
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        Object.values(row).forEach(val => {
+            tr.innerHTML += `<td>${val}</td>`;
+        });
+        tbody.appendChild(tr);
+    });
+}
+let chart, chartData = [], chartLabels = [];
+function updateChart(data) {
+    const select = document.getElementById('sensorSelect');
+    if (!select.value && data.length) {
+        select.innerHTML = data.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    }
+    const selectedId = select.value || (data[0] && data[0].id);
+    if (!selectedId) return;
+    fetchWithAuth(`/api/sensors/${selectedId}`).then(async response => {
+        if (!response) return;
+        const sensor = await response.json();
+        chartLabels.push(new Date().toLocaleTimeString());
+        chartData.push(sensor.value);
+        if (chartLabels.length > 20) {
+            chartLabels.shift();
+            chartData.shift();
+        }
+        chart.data.labels = [...chartLabels];
+        chart.data.datasets[0].data = [...chartData];
+        chart.data.datasets[0].label = sensor.name;
+        chart.update();
+    });
+}
+document.addEventListener('DOMContentLoaded', () => {
+    setInterval(async () => {
+        const response = await fetchWithAuth('/api/sensors');
+        if (response) {
+            const data = await response.json();
+            updateSensorTable(data);
+            updateAlerts(data);
+            updateChart(data);
+        }
+    }, 2000);
+    setInterval(async () => {
+        const response = await fetchWithAuth('/api/history');
+        if (response) {
+            const data = await response.json();
+            updateHistoryTable(data);
+        }
+    }, 5000);
+    const ctx = document.getElementById('sensorChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: '',
+                data: [],
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13,110,253,0.1)',
+                tension: 0.2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: true } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+    document.getElementById('sensorSelect').addEventListener('change', () => {
+        chartData = [];
+        chartLabels = [];
+    });
+});
+async function exportData() {
+    const response = await fetchWithAuth('/api/export');
+    if (response) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sensor_data.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+    }
+}
+</script>
+</body>
+</html> 

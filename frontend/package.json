@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "start": "react-scripts start frontend",
+    "build": "react-scripts build frontend",
+    "test": "react-scripts test frontend",
+    "eject": "react-scripts eject frontend"
+  }
+} 

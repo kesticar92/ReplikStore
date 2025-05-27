@@ -19,3 +19,46 @@ Incluye los Custom Events:
 - OnStatusUpdate
 
 Esto permitirá que toda la UI reaccione en tiempo real a los eventos del backend.
+
+## Solución definitiva: Regenerar archivos de proyecto Xcode
+
+### 1. Cierra Unreal Engine y Xcode completamente.
+
+### 2. Regenera los archivos de proyecto Xcode
+
+Abre la terminal y ejecuta este comando desde la raíz de tu proyecto (donde está `ReplikStore.uproject`):
+
+```bash
+/Applications/Unreal\ Engine/Engine/Build/BatchFiles/Mac/GenerateProjectFiles.sh -project="$PWD/ReplikStore.uproject"
+```
+
+- Si tienes Unreal Engine instalado en otra ruta, ajusta la ruta del script.
+- Este comando regenerará los archivos `.xcodeproj` y `.xcworkspace` correctamente.
+
+### 3. Abre el nuevo archivo de proyecto en Xcode
+
+- Abre el archivo `ReplikStore.xcworkspace` (o `ReplikStore.xcodeproj` si no tienes workspace).
+- Ahora los targets deberían aparecer en negro (no en rojo).
+
+### 4. Haz Build en Xcode
+
+- Selecciona el target **ReplikStoreEditor (Mac)**.
+- Haz clic en "Build" (Cmd+B).
+
+### 5. Abre Unreal Engine
+
+- Una vez que el build termine sin errores, abre tu proyecto en Unreal Engine.
+- Ya no debería pedirte recompilar módulos y deberías ver todas las clases C++.
+
+## ¿Por qué ocurre esto?
+
+- Cuando se eliminan carpetas como `Intermediate` y `Binaries`, Unreal Engine pierde los archivos de proyecto de Xcode.
+- Regenerar los archivos de proyecto soluciona el problema y vuelve a vincular todo correctamente.
+
+## ¿Qué hacer si el comando falla o no tienes el script?
+
+- Dímelo y te ayudo a encontrar la ruta correcta del script en tu instalación de Unreal Engine.
+- Si el build en Xcode muestra errores, mándame el mensaje exacto y lo corrijo automáticamente.
+
+**¿Quieres que ejecute el comando por ti o prefieres probarlo tú?**  
+¡Avísame si necesitas ayuda con la ruta del script o si surge algún error nuevo!
