@@ -1,72 +1,33 @@
 {
-  "name": "replikstore",
+  "name": "replikstore-frontend",
   "version": "1.0.0",
-  "description": "Sistema de gestión para ReplikStore",
-  "main": "backend/server.js",
+  "private": true,
+  "description": "Frontend React para ReplikStore",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js",
-    "test": "cd backend && npm test",
-    "test:integration": "cd backend && NODE_ENV=test mocha tests/setup.js tests/integration.test.js --timeout 5000 --exit --parallel --jobs 4 --bail",
-    "test:recovery": "cd backend && NODE_ENV=test mocha tests/setup.js tests/recovery.test.js --timeout 5000 --exit --parallel --jobs 4 --bail",
-    "test:security": "cd backend && NODE_ENV=test mocha tests/setup.js tests/security.test.js --timeout 5000 --exit --parallel --jobs 4 --bail",
-    "test:load": "artillery run backend/tests/load/websocket-load.yml",
-    "test:all": "npm run test:integration && npm run test:recovery && npm run test:security && npm run test:load",
-    "lint": "eslint .",
-    "build": "echo 'No build step required'",
-    "docs": "jsdoc -c jsdoc.json"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
-    "express": "^4.18.2",
-    "express-jwt": "^8.5.1",
-    "express-rate-limit": "^7.5.0",
-    "express-validator": "^7.2.1",
-    "ioredis": "^5.3.2",
-    "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0",
-    "prom-client": "^14.2.0",
-    "sqlite3": "^5.1.7",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^4.6.3",
-    "ws": "^8.18.2",
-    "mongoose": "^7.0.3",
-    "nodemailer": "^6.9.1",
-    "twilio": "^4.11.0",
-    "winston": "^3.8.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "^5.0.1"
   },
   "devDependencies": {
-    "artillery": "^2.0.3",
-    "axios": "^1.6.7",
-    "bcrypt": "^6.0.0",
-    "eslint": "^8.56.0",
-    "get-port": "^5.1.1",
-    "jest": "^29.7.0",
-    "jest-websocket-mock": "^2.5.0",
-    "jsdoc": "^4.0.2",
-    "nodemon": "^3.1.0",
-    "supertest": "^6.3.3",
-    "chai": "^4.3.7",
-    "mocha": "^10.2.0",
-    "sinon": "^15.0.3"
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.0.0"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFilesAfterEnv": [
-      "./tests/setup.js"
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
     ],
-    "testTimeout": 120000,
-    "verbose": true,
-    "testPathIgnorePatterns": [
-      "/node_modules/"
-    ],
-    "globals": {
-      "TEST_TIMEOUT": 120000
-    }
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
-}
+} 
